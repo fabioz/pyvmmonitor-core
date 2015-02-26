@@ -19,7 +19,7 @@ def _get_class(classname):
     return ret
 
 
-class NotSingletonError(RuntimeError):
+class NotInstanceError(RuntimeError):
     pass
 
 
@@ -30,28 +30,31 @@ class NotRegisteredError(RuntimeError):
 class PluginManager(object):
 
     '''
-    This is a manager of plugins.
+    This is a manager of plugins (which we refer to extension points and implementations).
 
     Mostly, we have a number of EPs (Extension Points) and implementations may be registered
     for those extension points.
 
-    The PluginManager is able to provide implementations (through #get_impls) which are not
-    kept on being tracked and a special concept which keeps an instance alive for an extension
-    (through #get_singleton) -- note that it's not a real singleton, but rather a single instance
-    that's registered for some implementation.
+    The PluginManager is able to provide implementations (through #get_implementations) which are
+    not kept on being tracked and a special concept which keeps an instance alive for an extension
+    (through #get_instance).
 
-    Every singleton registered will have a 'plugins_exit' method called if it defines it when
-    the PluginManager is about to exit.
+    Every instance registered will have:
+
+    - a 'pm' attribute set to this PluginManager (which is a weak reference to the plugin manager).
+
+    - a 'plugins_exit' method called if it defines it when the PluginManager is about to exit (if
+      it defines one).
     '''
 
     def __init__(self):
         self._ep_to_impls = {}
-        self._ep_to_singleton_impls = {}
-        self._ep_and_context_to_singleton = {}
+        self._ep_to_instance_impls = {}
+        self._ep_and_context_to_instance = {}
         self.exited = False
         self.on_about_to_exit = Callback()
 
-    def get_impls(self, ep):
+    def get_implementations(self, ep):
         assert not self.exited
         impls = self._ep_to_impls.get(ep, [])
         ret = []
@@ -61,10 +64,10 @@ class PluginManager(object):
 
         return ret
 
-    def register(self, ep, impl, kwargs={}, singleton=False):
+    def register(self, ep, impl, kwargs={}, keep_instance=False):
         assert not self.exited
-        if singleton:
-            register_at = self._ep_to_singleton_impls
+        if keep_instance:
+            register_at = self._ep_to_instance_impls
         else:
             register_at = self._ep_to_impls
         impls = register_at.get(ep)
@@ -72,51 +75,51 @@ class PluginManager(object):
             impls = register_at[ep] = []
         impls.append((impl, kwargs))
 
-    def set_singleton(self, ep, instance, context=None):
+    def set_instance(self, ep, instance, context=None):
         key = (ep, context)
         instance.pm = get_weakref(self)
-        self._ep_and_context_to_singleton[key] = instance
+        self._ep_and_context_to_instance[key] = instance
 
-    def get_singleton(self, ep, context=None):
+    def get_instance(self, ep, context=None):
         '''
-        Creates a singleton in this plugin manager: Meaning that whenever a new EP is asked in
+        Creates an instance in this plugin manager: Meaning that whenever a new EP is asked in
         the same context it'll receive the same instance created previously (and it'll be
         kept alive in the plugin manager).
 
-        Also, the singleton has its 'pm' attribute set to be this plugin manager.
+        Also, the instance will have its 'pm' attribute set to be this plugin manager.
         '''
         assert not self.exited
         key = (ep, context)
         try:
-            return self._ep_and_context_to_singleton[key]
+            return self._ep_and_context_to_instance[key]
         except:
             try:
-                impls = self._ep_to_singleton_impls[ep]
+                impls = self._ep_to_instance_impls[ep]
             except KeyError:
                 if ep in self._ep_to_impls:
-                    # Registered but not a singleton.
-                    raise NotSingletonError()
+                    # Registered but not a kept instance.
+                    raise NotInstanceError()
                 else:
                     # Not registered at all.
                     raise NotRegisteredError()
             assert len(impls) == 1
             impl, kwargs = impls[0]
             class_ = _get_class(impl)
-            ret = self._ep_and_context_to_singleton[key] = class_(**kwargs)
+            ret = self._ep_and_context_to_instance[key] = class_(**kwargs)
             ret.pm = get_weakref(self)
             return ret
 
     def exit(self):
         try:
             self.on_about_to_exit()
-            for singleton in list(self._ep_and_context_to_singleton.itervalues()):
-                if hasattr(singleton, 'plugins_exit'):
+            for instance in list(self._ep_and_context_to_instance.itervalues()):
+                if hasattr(instance, 'plugins_exit'):
                     try:
-                        singleton.plugins_exit()
+                        instance.plugins_exit()
                     except:
                         import traceback
                         traceback.print_exc()
         finally:
             self.exited = True
-            self._ep_and_context_to_singleton.clear()
+            self._ep_and_context_to_instance.clear()
             self._ep_to_impls.clear()
