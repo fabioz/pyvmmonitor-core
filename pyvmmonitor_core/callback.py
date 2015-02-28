@@ -84,7 +84,14 @@ class Callback(object):
                 # Deal with an instance
                 return (weakref.ref(func), None, None)
             else:
-                # not a method -- a callable: create a strong reference
+                # Not a method -- a callable: create a strong reference
+                # Why you may ask? Well, the main reason is that this use-case is usually for
+                # closures, so, it may be hard to find a place to add the instance -- and if
+                # it's a top level, the function will be alive until the end of times anyway.
+                #
+                # Anyways, this is probably a case that should only be used with care as
+                # unregistering must be explicit and things in the function scope will be
+                # kept alive!
                 return (None, func, None)
 
     def __call__(self, *args, **kwargs):
