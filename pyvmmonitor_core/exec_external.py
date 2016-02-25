@@ -2,7 +2,10 @@
 #
 # Copyright: Brainwy Software
 
-import StringIO
+try:
+    import StringIO
+except:
+    import io as StringIO
 import subprocess
 import sys
 import threading
