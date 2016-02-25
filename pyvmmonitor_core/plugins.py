@@ -112,7 +112,7 @@ class PluginManager(object):
     def exit(self):
         try:
             self.on_about_to_exit()
-            for instance in list(self._ep_and_context_to_instance.itervalues()):
+            for instance in list(self._ep_and_context_to_instance.values()):
                 if hasattr(instance, 'plugins_exit'):
                     try:
                         instance.plugins_exit()
