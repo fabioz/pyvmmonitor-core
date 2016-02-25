@@ -71,3 +71,38 @@ class WeakList(object):
 
     def clear(self):
         del self._items[:]
+
+
+class WeakSet(object):
+
+    def __init__(self):
+        self._items = set()
+
+    def add(self, item):
+        self._items.add(get_weakref(item))
+
+    def remove(self, item):
+        self._items.remove(get_weakref(item))
+
+    def discard(self, item):
+        try:
+            self.remove(item)
+        except KeyError:
+            pass
+
+    def clear(self):
+        self._items.clear()
+
+    def __iter__(self):
+        for ref in self._items.copy():
+            d = ref()
+            if d is None:
+                self._items.remove(ref)
+            else:
+                yield d
+
+    def __len__(self):
+        i = 0
+        for _k in self:
+            i += 1
+        return i
