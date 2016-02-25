@@ -9,7 +9,10 @@ import sys
 import types
 import weakref
 
+from pyvmmonitor_core import compat
 from pyvmmonitor_core.thread_utils import is_in_main_thread
+
+
 try:
     import new
 except ImportError:
@@ -41,58 +44,113 @@ class Callback(object):
     def __init__(self):
         self._callbacks = odict()
 
-    def _get_key(self, func):
-        '''
-        :param object func:
-            The function for which we want the key.
+    if compat.PY2:
+        def _get_key(self, func):
+            '''
+            :param object func:
+                The function for which we want the key.
 
-        :rtype: object
-        :returns:
-            Returns the key to be used to access the object.
+            :rtype: object
+            :returns:
+                Returns the key to be used to access the object.
 
-        .. note:: The key is guaranteed to be unique among the living objects, but if the object
-        is garbage collected, a new function may end up having the same key.
-        '''
-        try:
-            if func.im_self is not None:
-                # bound method
-                return (id(func.im_self), id(func.im_func), id(func.im_class))
-            else:
-                return (id(func.im_func), id(func.im_class))
+            .. note:: The key is guaranteed to be unique among the living objects, but if the object
+            is garbage collected, a new function may end up having the same key.
+            '''
+            try:
+                if func.im_self is not None:
+                    # bound method
+                    return (id(func.im_self), id(func.im_func), id(func.im_class))
+                else:
+                    return (id(func.im_func), id(func.im_class))
 
-        except AttributeError:
-            return id(func)
+            except AttributeError:
+                return id(func)
+    else:
+        def _get_key(self, func):
+            '''
+            :param object func:
+                The function for which we want the key.
 
-    def _get_info(self, func):
-        '''
-        :rtype: tuple(func_obj, func_func, func_class)
-        :returns:
-            Returns a tuple with the information needed to call a method later on (close to the
-            WeakMethodRef, but a bit more specialized -- and faster for this context).
-        '''
-        # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
-        # at this point
-        try:
-            if func.im_self is not None:
-                # bound method
-                return (weakref.ref(func.im_self), func.im_func, func.im_class)
-            else:
-                # unbound method
-                return (None, func.im_func, func.im_class)
-        except AttributeError:
-            if not isinstance(func, types.FunctionType):
-                # Deal with an instance
-                return (weakref.ref(func), None, None)
-            else:
-                # Not a method -- a callable: create a strong reference
-                # Why you may ask? Well, the main reason is that this use-case is usually for
-                # closures, so, it may be hard to find a place to add the instance -- and if
-                # it's a top level, the function will be alive until the end of times anyway.
-                #
-                # Anyways, this is probably a case that should only be used with care as
-                # unregistering must be explicit and things in the function scope will be
-                # kept alive!
-                return (None, func, None)
+            :rtype: object
+            :returns:
+                Returns the key to be used to access the object.
+
+            .. note:: The key is guaranteed to be unique among the living objects, but if the object
+            is garbage collected, a new function may end up having the same key.
+            '''
+            try:
+                if func.__self__ is not None:
+                    # bound method
+                    return (id(func.__self__), id(func.__func__), id(func.__class__))
+                else:
+                    return (id(func.__func__), id(func.__class__))
+
+            except AttributeError:
+                return id(func)
+
+    if compat.PY2:
+        def _get_info(self, func):
+            '''
+            :rtype: tuple(func_obj, func_func, func_class)
+            :returns:
+                Returns a tuple with the information needed to call a method later on (close to the
+                WeakMethodRef, but a bit more specialized -- and faster for this context).
+            '''
+            # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
+            # at this point
+            try:
+                if func.im_self is not None:
+                    # bound method
+                    return (weakref.ref(func.im_self), func.im_func, func.im_class)
+                else:
+                    # unbound method
+                    return (None, func.im_func, func.im_class)
+            except AttributeError:
+                if not isinstance(func, types.FunctionType):
+                    # Deal with an instance
+                    return (weakref.ref(func), None, None)
+                else:
+                    # Not a method -- a callable: create a strong reference
+                    # Why you may ask? Well, the main reason is that this use-case is usually for
+                    # closures, so, it may be hard to find a place to add the instance -- and if
+                    # it's a top level, the function will be alive until the end of times anyway.
+                    #
+                    # Anyways, this is probably a case that should only be used with care as
+                    # unregistering must be explicit and things in the function scope will be
+                    # kept alive!
+                    return (None, func, None)
+    else:
+        def _get_info(self, func):
+            '''
+            :rtype: tuple(func_obj, func_func, func_class)
+            :returns:
+                Returns a tuple with the information needed to call a method later on (close to the
+                WeakMethodRef, but a bit more specialized -- and faster for this context).
+            '''
+            # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
+            # at this point
+            try:
+                if func.__self__ is not None:
+                    # bound method
+                    return (weakref.ref(func.__self__), func.__func__, func.__class__)
+                else:
+                    # unbound method
+                    return (None, func.__func__, func.__class__)
+            except AttributeError:
+                if not isinstance(func, types.FunctionType):
+                    # Deal with an instance
+                    return (weakref.ref(func), None, None)
+                else:
+                    # Not a method -- a callable: create a strong reference
+                    # Why you may ask? Well, the main reason is that this use-case is usually for
+                    # closures, so, it may be hard to find a place to add the instance -- and if
+                    # it's a top level, the function will be alive until the end of times anyway.
+                    #
+                    # Anyways, this is probably a case that should only be used with care as
+                    # unregistering must be explicit and things in the function scope will be
+                    # kept alive!
+                    return (None, func, None)
 
     def __call__(self, *args, **kwargs):
         '''
@@ -120,7 +178,11 @@ class Callback(object):
                     if func_func is None:
                         to_call.append(func_obj)
                     else:
-                        to_call.append(new.instancemethod(func_func, func_obj, info[2]))
+                        if compat.PY2:
+                            to_call.append(new.instancemethod(func_func, func_obj, info[2]))
+                        else:
+                            to_call.append(new.MethodType(func_func, func_obj))
+
             else:
                 func_func = info[1]
 

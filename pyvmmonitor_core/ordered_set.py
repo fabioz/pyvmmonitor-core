@@ -3,6 +3,7 @@
 # Copyright: Brainwy Software
 
 import collections
+from pyvmmonitor_core import compat
 
 
 class OrderedSet(collections.MutableSet):
@@ -18,7 +19,7 @@ class OrderedSet(collections.MutableSet):
                 self.add(e)
 
     def index(self, elem):
-        for i, key in enumerate(self._dict.iterkeys()):
+        for i, key in enumerate(compat.iterkeys(self._dict)):
             if key == elem:
                 return i
         return -1
@@ -27,13 +28,13 @@ class OrderedSet(collections.MutableSet):
         return x in self._dict
 
     def __iter__(self):
-        return self._dict.iterkeys()
+        return iter(self._dict)
 
     def __len__(self):
         return len(self._dict)
 
     def item_at(self, i):
-        return self._dict.keys()[i]
+        return compat.keys(self._dict)[i]
 
     def add(self, elem):
         self._dict[elem] = None
@@ -42,10 +43,10 @@ class OrderedSet(collections.MutableSet):
         self._dict.pop(elem, None)
 
     def __repr__(self):
-        return 'OrderedSet([%s])' % (', '.join(map(repr, self._dict.iterkeys())))
+        return 'OrderedSet([%s])' % (', '.join(map(repr, compat.iterkeys(self._dict))))
 
     def __str__(self):
-        return '{%s}' % (', '.join(map(repr, self._dict.iterkeys())))
+        return '{%s}' % (', '.join(map(repr, compat.iterkeys(self._dict))))
 
     def popitem(self, last=True):
         return self._dict.popitem(last=last)
