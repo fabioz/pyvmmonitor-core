@@ -27,3 +27,6 @@ def test_ordered_set():
     assert list(s) == [3, 4]
     s.popitem(last=True)
     assert list(s) == [3]
+
+    s.insert_before(3, 4)
+    assert list(s) == [4, 3]

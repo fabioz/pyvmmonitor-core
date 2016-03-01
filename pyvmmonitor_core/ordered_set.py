@@ -3,6 +3,8 @@
 # Copyright: Brainwy Software
 
 import collections
+
+
 from pyvmmonitor_core import compat
 
 
@@ -53,3 +55,26 @@ class OrderedSet(collections.MutableSet):
 
     def popitem(self, last=True):
         return self._dict.popitem(last=last)
+
+    def insert_before(self, key, elem):
+        raise AssertionError('todo: finish')
+        assert elem not in self
+
+        self.__map[key] = new_link = collections._Link()
+
+        link = self._dict._OrderedDict__map[key]
+        link_prev = link.prev
+        link_next = link.next
+        link_prev.next = link_next
+        link_next.prev = link_prev
+        root = self.__root
+        if last:
+            last = root.prev
+            link.prev = last
+            link.next = root
+            last.next = root.prev = link
+        else:
+            first = root.next
+            link.prev = root
+            link.next = first
+            root.next = first.prev = link
