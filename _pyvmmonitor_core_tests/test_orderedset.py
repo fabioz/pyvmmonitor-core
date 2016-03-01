@@ -7,6 +7,7 @@ def test_ordered_set():
     assert list(s) == [1, 2, 3]
     s.discard(2)
     assert list(s) == [1, 3]
+    assert list(reversed(s)) == [3, 1]
     assert s.index(3) == 1
     repr(s)
     str(s)

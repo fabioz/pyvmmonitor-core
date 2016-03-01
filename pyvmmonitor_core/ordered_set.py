@@ -27,6 +27,9 @@ class OrderedSet(collections.MutableSet):
     def __contains__(self, x):
         return x in self._dict
 
+    def __reversed__(self):
+        return reversed(self._dict)
+
     def __iter__(self):
         return iter(self._dict)
 
