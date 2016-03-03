@@ -57,24 +57,22 @@ class OrderedSet(collections.MutableSet):
         return self._dict.popitem(last=last)
 
     def insert_before(self, key, elem):
-        raise AssertionError('todo: finish')
         assert elem not in self
 
-        self.__map[key] = new_link = collections._Link()
+        self._dict._OrderedDict__map[elem] = new_link = collections._Link()
+        new_link.key = elem
 
-        link = self._dict._OrderedDict__map[key]
-        link_prev = link.prev
-        link_next = link.next
-        link_prev.next = link_next
-        link_next.prev = link_prev
-        root = self.__root
-        if last:
-            last = root.prev
-            link.prev = last
-            link.next = root
-            last.next = root.prev = link
-        else:
-            first = root.next
-            link.prev = root
-            link.next = first
-            root.next = first.prev = link
+        odict_map = self._dict._OrderedDict__map
+        odict_map[elem] = new_link
+        dict.__setitem__(self._dict, elem, None)
+        add_before_link = odict_map[key]
+
+        new_link.prev = add_before_link.prev
+        new_link.next = add_before_link
+        add_before_link.prev = new_link
+        new_link.prev.next = new_link
+
+        root = self._dict._OrderedDict__root
+
+        if root.next is add_before_link:
+            root.next = new_link

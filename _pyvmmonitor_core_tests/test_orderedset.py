@@ -30,3 +30,20 @@ def test_ordered_set():
 
     s.insert_before(3, 4)
     assert list(s) == [4, 3]
+    assert 4 in s
+
+    s.insert_before(4, 5)
+    assert list(s) == [5, 4, 3]
+
+    s.insert_before(3, 9)
+    assert list(s) == [5, 4, 9, 3]
+
+    s.insert_before(5, 8)
+    expected = [8, 5, 4, 9, 3]
+    assert list(s) == expected
+    for e in expected:
+        assert e in s
+
+    assert list(reversed(s)) == list(reversed(expected))
+    s.discard(8)
+    assert list(s) == [5, 4, 9, 3]
