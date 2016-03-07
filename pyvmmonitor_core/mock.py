@@ -1,6 +1,7 @@
 # License: LGPL
 #
 # Copyright: Brainwy Software
+from pyvmmonitor_core import compat
 
 '''
 A simple mock...
@@ -27,7 +28,7 @@ class Mock(object):
         '''
         self.obj = obj
         self._restore = []
-        for attr, val in kw.iteritems():
+        for attr, val in compat.iteritems(kw):
             self._restore.append((attr, getattr(obj, attr)))
             setattr(self.obj, attr, val)
 
