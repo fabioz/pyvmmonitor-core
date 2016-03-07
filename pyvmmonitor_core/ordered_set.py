@@ -3,6 +3,8 @@
 # Copyright: Brainwy Software
 
 import collections
+
+
 from pyvmmonitor_core import compat
 
 
@@ -27,6 +29,9 @@ class OrderedSet(collections.MutableSet):
     def __contains__(self, x):
         return x in self._dict
 
+    def __reversed__(self):
+        return reversed(self._dict)
+
     def __iter__(self):
         return iter(self._dict)
 
@@ -50,3 +55,24 @@ class OrderedSet(collections.MutableSet):
 
     def popitem(self, last=True):
         return self._dict.popitem(last=last)
+
+    def insert_before(self, key, elem):
+        assert elem not in self
+
+        self._dict._OrderedDict__map[elem] = new_link = collections._Link()
+        new_link.key = elem
+
+        odict_map = self._dict._OrderedDict__map
+        odict_map[elem] = new_link
+        dict.__setitem__(self._dict, elem, None)
+        add_before_link = odict_map[key]
+
+        new_link.prev = add_before_link.prev
+        new_link.next = add_before_link
+        add_before_link.prev = new_link
+        new_link.prev.next = new_link
+
+        root = self._dict._OrderedDict__root
+
+        if root.next is add_before_link:
+            root.next = new_link

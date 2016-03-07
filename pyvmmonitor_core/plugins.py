@@ -60,7 +60,9 @@ class PluginManager(object):
         ret = []
         for impl, kwargs in impls:
             class_ = _get_class(impl)
-            ret.append(class_(**kwargs))
+            instance = class_(**kwargs)
+            instance.pm = get_weakref(self)
+            ret.append(instance)
 
         return ret
 
