@@ -87,6 +87,7 @@ class Callback(object):
                     return (id(func.__func__), id(func.__class__))
 
             except AttributeError:
+                # Instance or function
                 return id(func)
 
     if compat.PY2:
@@ -97,8 +98,6 @@ class Callback(object):
                 Returns a tuple with the information needed to call a method later on (close to the
                 WeakMethodRef, but a bit more specialized -- and faster for this context).
             '''
-            # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
-            # at this point
             try:
                 if func.im_self is not None:
                     # bound method
@@ -128,8 +127,6 @@ class Callback(object):
                 Returns a tuple with the information needed to call a method later on (close to the
                 WeakMethodRef, but a bit more specialized -- and faster for this context).
             '''
-            # Note: if it's a _CallbackWrapper, we want to register it and not the 'original method'
-            # at this point
             try:
                 if func.__self__ is not None:
                     # bound method
@@ -164,7 +161,7 @@ class Callback(object):
         # because we don't want to had a function call overhead here.
         to_call = []
 
-        for key, info in callbacks.items():  # iterate in a copy
+        for key, info in compat.items(callbacks):  # iterate in a copy
 
             func_obj = info[0]
             if func_obj is not None:
