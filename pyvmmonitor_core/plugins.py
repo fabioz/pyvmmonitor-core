@@ -6,16 +6,16 @@ from pyvmmonitor_core.callback import Callback
 from pyvmmonitor_core.weak_utils import get_weakref
 
 
-def _get_class(classname):
-    i = classname.rindex('.')
-    modname = classname[:i]
-    classname = classname[i + 1:]
+def load_class(import_class_path):
+    i = import_class_path.rindex('.')
+    modname = import_class_path[:i]
+    import_class_path = import_class_path[i + 1:]
 
     ret = __import__(modname)
     for part in modname.split('.')[1:]:
         ret = getattr(ret, part)
 
-    ret = getattr(ret, classname)
+    ret = getattr(ret, import_class_path)
     return ret
 
 
@@ -59,7 +59,7 @@ class PluginManager(object):
         impls = self._ep_to_impls.get(ep, [])
         ret = []
         for impl, kwargs in impls:
-            class_ = _get_class(impl)
+            class_ = load_class(impl)
             instance = class_(**kwargs)
             instance.pm = get_weakref(self)
             ret.append(instance)
@@ -106,7 +106,7 @@ class PluginManager(object):
                     raise NotRegisteredError()
             assert len(impls) == 1
             impl, kwargs = impls[0]
-            class_ = _get_class(impl)
+            class_ = load_class(impl)
             ret = self._ep_and_context_to_instance[key] = class_(**kwargs)
             ret.pm = get_weakref(self)
             return ret
