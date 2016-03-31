@@ -3,6 +3,7 @@
 # Copyright: Brainwy Software
 
 import weakref
+from pyvmmonitor_core.ordered_set import OrderedSet
 _NONE_LAMDA = lambda: None
 
 
@@ -72,6 +73,12 @@ class WeakList(object):
     def clear(self):
         del self._items[:]
 
+    def __len__(self):
+        i = 0
+        for _k in self:
+            i += 1
+        return i
+
 
 class WeakSet(object):
 
@@ -98,6 +105,38 @@ class WeakSet(object):
             d = ref()
             if d is None:
                 self._items.remove(ref)
+            else:
+                yield d
+
+    def __len__(self):
+        i = 0
+        for _k in self:
+            i += 1
+        return i
+
+
+class WeakOrderedSet(object):
+
+    def __init__(self):
+        self._items = OrderedSet()
+
+    def add(self, item):
+        self._items.add(get_weakref(item))
+
+    def remove(self, item):
+        self._items.remove(get_weakref(item))
+
+    def discard(self, item):
+        self._items.discard(get_weakref(item))
+
+    def clear(self):
+        self._items.clear()
+
+    def __iter__(self):
+        for ref in list(self._items):
+            d = ref()
+            if d is None:
+                self._items.discard(ref)
             else:
                 yield d
 
