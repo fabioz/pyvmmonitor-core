@@ -1,4 +1,4 @@
-# License: PyVmMonitor license (commercial)
+# License: LGPL
 #
 # Copyright: Brainwy Software
 
