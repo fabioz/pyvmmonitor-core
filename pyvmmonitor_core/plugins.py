@@ -27,6 +27,10 @@ class NotRegisteredError(RuntimeError):
     pass
 
 
+class InstanceAlreadyRegisteredError(RuntimeError):
+    pass
+
+
 class PluginManager(object):
 
     '''
@@ -67,14 +71,33 @@ class PluginManager(object):
         return ret
 
     def register(self, ep, impl, kwargs={}, keep_instance=False):
+        '''
+
+        :param ep:
+        :param str impl:
+            This is the full path to the class implementation.
+
+        :param kwargs:
+        :param keep_instance:
+            If True, it'll be only available through pm.get_instance and the
+            instance will be kept for further calls.
+            If False, it'll only be available through get_implementations.
+        '''
         assert not self.exited
         if keep_instance:
             register_at = self._ep_to_instance_impls
+            impls = register_at.get(ep)
+            if impls is None:
+                impls = register_at[ep] = []
+            else:
+                raise InstanceAlreadyRegisteredError(
+                    'Unable to override when instance is kept and an implementation is already registered.')
         else:
             register_at = self._ep_to_impls
-        impls = register_at.get(ep)
-        if impls is None:
-            impls = register_at[ep] = []
+            impls = register_at.get(ep)
+            if impls is None:
+                impls = register_at[ep] = []
+
         impls.append((impl, kwargs))
 
     def set_instance(self, ep, instance, context=None):
