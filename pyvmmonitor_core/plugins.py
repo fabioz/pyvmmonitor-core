@@ -70,7 +70,7 @@ class PluginManager(object):
 
         return ret
 
-    def register(self, ep, impl, kwargs={}, keep_instance=False):
+    def register(self, ep, impl, kwargs={}, context=None, keep_instance=False):
         '''
 
         :param ep:
@@ -78,6 +78,10 @@ class PluginManager(object):
             This is the full path to the class implementation.
 
         :param kwargs:
+        :param context:
+            If keep_instance is True, it's possible to register it for a given
+            context.
+
         :param keep_instance:
             If True, it'll be only available through pm.get_instance and the
             instance will be kept for further calls.
@@ -86,9 +90,9 @@ class PluginManager(object):
         assert not self.exited
         if keep_instance:
             register_at = self._ep_to_instance_impls
-            impls = register_at.get(ep)
+            impls = register_at.get((ep, context))
             if impls is None:
-                impls = register_at[ep] = []
+                impls = register_at[(ep, context)] = []
             else:
                 raise InstanceAlreadyRegisteredError(
                     'Unable to override when instance is kept and an implementation is already registered.')
@@ -119,14 +123,22 @@ class PluginManager(object):
             return self._ep_and_context_to_instance[key]
         except:
             try:
-                impls = self._ep_to_instance_impls[ep]
+                impls = self._ep_to_instance_impls[key]
             except KeyError:
-                if ep in self._ep_to_impls:
-                    # Registered but not a kept instance.
-                    raise NotInstanceError()
-                else:
-                    # Not registered at all.
-                    raise NotRegisteredError()
+                found = False
+                if context is not None:
+                    found = True
+                    try:
+                        impls = self._ep_to_instance_impls[(ep, None)]
+                    except KeyError:
+                        found = False
+                if not found:
+                    if ep in self._ep_to_impls:
+                        # Registered but not a kept instance.
+                        raise NotInstanceError()
+                    else:
+                        # Not registered at all.
+                        raise NotRegisteredError()
             assert len(impls) == 1
             impl, kwargs = impls[0]
             class_ = load_class(impl)

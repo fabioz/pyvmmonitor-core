@@ -50,3 +50,11 @@ def test_plugins():
     assert not pm.get_implementations(EPBar)
     with pytest.raises(NotRegisteredError):
         pm.get_instance(EPBar)
+
+    pm.register(
+        EPFoo,
+        '_pyvmmonitor_core_tests.test_plugins.AnotherFooImpl',
+        context='context2',
+        keep_instance=True)
+
+    assert isinstance(pm.get_instance(EPFoo, context='context2'), AnotherFooImpl)
