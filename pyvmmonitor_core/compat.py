@@ -12,6 +12,7 @@ if PY3:
     unicode = str
     bytes = bytes
     xrange = range
+    izip = zip
     from io import StringIO
 
     def iterkeys(d):
@@ -60,6 +61,9 @@ else:
     unicode = unicode
     bytes = str
     xrange = xrange
+    import itertools
+    izip = itertools.izip
+
     from StringIO import StringIO
 
     def as_bytes(b):
