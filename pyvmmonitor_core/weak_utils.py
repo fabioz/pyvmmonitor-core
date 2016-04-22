@@ -2,8 +2,13 @@
 #
 # Copyright: Brainwy Software
 
+import inspect
 import weakref
+
 from pyvmmonitor_core.ordered_set import OrderedSet
+from pyvmmonitor_core.weakmethod import WeakMethod
+
+
 _NONE_LAMDA = lambda: None
 
 
@@ -13,6 +18,9 @@ def get_weakref(obj):
 
     if isinstance(obj, weakref.ref):
         return obj
+
+    if inspect.ismethod(obj):
+        return WeakMethod(obj)
 
     return weakref.ref(obj)
 
