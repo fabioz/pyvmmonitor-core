@@ -149,7 +149,7 @@ class Callback(object):
                     # kept alive!
                     return (None, func, None)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs):  # @DontTrace
         '''
         Calls every registered function with the given args and kwargs.
         '''
