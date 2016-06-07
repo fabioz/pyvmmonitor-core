@@ -2,6 +2,7 @@
 #
 # Copyright: Brainwy Software
 
+from pyvmmonitor_core import compat
 from pyvmmonitor_core.callback import Callback
 from pyvmmonitor_core.weak_utils import get_weakref
 
@@ -54,7 +55,7 @@ class PluginManager(object):
     def __init__(self):
         self._ep_to_impls = {}
         self._ep_to_instance_impls = {}
-        self._ep_and_context_to_instance = {}
+        self._ep_to_context_to_instance = {}
         self.exited = False
         self.on_about_to_exit = Callback()
 
@@ -105,9 +106,21 @@ class PluginManager(object):
         impls.append((impl, kwargs))
 
     def set_instance(self, ep, instance, context=None):
-        key = (ep, context)
         instance.pm = get_weakref(self)
-        self._ep_and_context_to_instance[key] = instance
+        instances = self._ep_to_context_to_instance.get(ep)
+        if instances is None:
+            instances = self._ep_to_context_to_instance[ep] = {}
+        instances[context] = instance
+
+    def iter_existing_instances(self, ep):
+        return compat.itervalues(self._ep_to_context_to_instance[ep])
+
+    def has_instance(self, ep, context=None):
+        try:
+            self.get_instance(ep, context)
+            return True
+        except NotRegisteredError:
+            return False
 
     def get_instance(self, ep, context=None):
         '''
@@ -118,12 +131,11 @@ class PluginManager(object):
         Also, the instance will have its 'pm' attribute set to be this plugin manager.
         '''
         assert not self.exited
-        key = (ep, context)
         try:
-            return self._ep_and_context_to_instance[key]
+            return self._ep_to_context_to_instance[ep][context]
         except:
             try:
-                impls = self._ep_to_instance_impls[key]
+                impls = self._ep_to_instance_impls[(ep, context)]
             except KeyError:
                 found = False
                 if context is not None:
@@ -142,14 +154,19 @@ class PluginManager(object):
             assert len(impls) == 1
             impl, kwargs = impls[0]
             class_ = load_class(impl)
-            ret = self._ep_and_context_to_instance[key] = class_(**kwargs)
+
+            instances = self._ep_to_context_to_instance.get(ep)
+            if instances is None:
+                instances = self._ep_to_context_to_instance[ep] = {}
+
+            ret = instances[context] = class_(**kwargs)
             ret.pm = get_weakref(self)
             return ret
 
     def exit(self):
         try:
             self.on_about_to_exit()
-            for instance in list(self._ep_and_context_to_instance.values()):
+            for instance in list(self._ep_to_context_to_instance.values()):
                 if hasattr(instance, 'plugins_exit'):
                     try:
                         instance.plugins_exit()
@@ -158,5 +175,5 @@ class PluginManager(object):
                         traceback.print_exc()
         finally:
             self.exited = True
-            self._ep_and_context_to_instance.clear()
+            self._ep_to_context_to_instance.clear()
             self._ep_to_impls.clear()

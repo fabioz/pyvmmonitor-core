@@ -57,4 +57,9 @@ def test_plugins():
         context='context2',
         keep_instance=True)
 
+    assert len(list(pm.iter_existing_instances(EPFoo))) == 1
     assert isinstance(pm.get_instance(EPFoo, context='context2'), AnotherFooImpl)
+
+    assert len(list(pm.iter_existing_instances(EPFoo))) == 2
+    assert set(pm.iter_existing_instances(EPFoo)) == set(
+        [pm.get_instance(EPFoo, context='context2'), pm.get_instance(EPFoo)])
