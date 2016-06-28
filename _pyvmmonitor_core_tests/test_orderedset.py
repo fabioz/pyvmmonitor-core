@@ -87,6 +87,9 @@ def test_ordered_set():
     s.discard(Stub(8))
     assert list(s) == [Stub(5), Stub(4), Stub(9), Stub(3)]
 
+    del e
+    del expected
+
     s.move_to_end(Stub(4))
     assert list(s) == [Stub(5), Stub(9), Stub(3), Stub(4)]
 
@@ -98,6 +101,12 @@ def test_ordered_set():
 
     s.move_to_previous(Stub(5))
     assert list(s) == [Stub(5), Stub(4), Stub(9), Stub(3)]
+
+    s.move_to_next(Stub(5))
+    assert list(s) == [Stub(4), Stub(5), Stub(9), Stub(3)]
+
+    s.move_to_next(Stub(3))
+    assert list(s) == [Stub(4), Stub(5), Stub(9), Stub(3)]
 
     s.clear()
     assert len(Stub.created) == 0, 'Stub objects not garbage-collected!'

@@ -3,25 +3,27 @@
 # Copyright: Brainwy Software
 
 import collections
+from weakref import ref
 
 
 class _Node(object):
-    __slots__ = ['prev', 'next', 'el']
+    __slots__ = ['prev', 'next', 'el', '__weakref__']
 
 
 class OrderedSet(collections.MutableSet):
     '''
     Some notes:
 
-    root.next is actually the first element of the internal double linked list
-    root.prev is the last element
+    self._end.next is actually the first element of the internal double linked list
+    self._end.prev is the last element
     '''
 
     def __init__(self, initial=()):
-        root = self._end = _Node()
+        end = self._end = _Node()
 
-        root.prev = root
-        root.next = root
+        root_ref = self._root_ref = ref(end)
+        end.prev = root_ref
+        end.next = root_ref
         self._dict = {}
 
         for a in initial:
@@ -33,10 +35,12 @@ class OrderedSet(collections.MutableSet):
             node.el = el
 
             root = self._end
-            curr = root.prev
-            node.prev = curr
-            node.next = root
-            curr.next = root.prev = self._dict[el] = node
+            curr_ref = root.prev
+            curr = curr_ref()
+            node.prev = curr_ref
+            node.next = self._root_ref
+            self._dict[el] = node
+            curr.next = root.prev = ref(node)
 
     def update(self, *args):
         for s in args:
@@ -54,24 +58,25 @@ class OrderedSet(collections.MutableSet):
 
     def __iter__(self):
         root = self._end
-        node = root.next
+        node = root.next()
 
         while node is not root:
             yield node.el
-            node = node.next
+            node = node.next()
 
     def __reversed__(self):
         root = self._end
-        curr = root.prev
+        curr = root.prev()
         while curr is not root:
             yield curr.el
-            curr = curr.prev
+            curr = curr.prev()
 
     def discard(self, el):
         entry = self._dict.pop(el, None)
         if entry is not None:
-            entry.prev.next = entry.next
-            entry.next.prev = entry.prev
+            # Set a ref with a ref is ok.
+            entry.prev().next = entry.next
+            entry.next().prev = entry.prev
 
     def item_at(self, i):
         for k, el in enumerate(self):
@@ -90,9 +95,9 @@ class OrderedSet(collections.MutableSet):
 
     def popitem(self, last=True):
         if last:
-            node = self._end.prev
+            node = self._end.prev()
         else:
-            node = self._end.next
+            node = self._end.next()
 
         if node is self._end:
             raise KeyError('empty')
@@ -112,9 +117,10 @@ class OrderedSet(collections.MutableSet):
         add_before_link = self._dict[key_before]
 
         new_link.prev = add_before_link.prev
-        new_link.next = add_before_link
-        add_before_link.prev = new_link
-        new_link.prev.next = new_link
+        new_link.next = ref(add_before_link)
+        new_link_ref = ref(new_link)
+        add_before_link.prev = new_link_ref
+        new_link.prev().next = new_link_ref
 
     def move_to_beginning(self, el):
         self.discard(el)
@@ -122,7 +128,7 @@ class OrderedSet(collections.MutableSet):
             self.add(el)
         else:
             root = self._end
-            node = root.next
+            node = root.next()
             self.insert_before(node.el, el)
 
     def move_to_end(self, el):
@@ -131,7 +137,14 @@ class OrderedSet(collections.MutableSet):
 
     def move_to_previous(self, el):
         node = self._dict[el]
-        if len(self._dict) > 1 and self._end.next.el != el:
-            before_key = node.prev.el
+        if len(self._dict) > 1 and self._end.next().el != el:
+            before_key = node.prev().el
+            self.discard(el)
+            self.insert_before(before_key, el)
+
+    def move_to_next(self, el):
+        node = self._dict[el]
+        if len(self._dict) > 1 and self._end.prev().el != el:
+            before_key = node.next().next().el
             self.discard(el)
             self.insert_before(before_key, el)
