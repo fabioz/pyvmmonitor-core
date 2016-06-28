@@ -76,3 +76,34 @@ class OrderedSet(collections.MutableSet):
 
         if root.next is add_before_link:
             root.next = new_link
+
+    def move_to_end(self, key):
+        self._dict.move_to_end(key)
+
+    def move_to_beginning(self, key):
+        self._dict.move_to_end(key, last=False)
+
+    def move_to_previous(self, key):
+        odict_map = self._dict._OrderedDict__map
+        root = self._dict._OrderedDict__root
+
+        link = odict_map[key]
+
+        if root.next is link:
+            # Already first
+            return
+
+        link_prev = link.prev
+        link_next = link.next
+        link_prev.next = link_next
+        link_next.prev = link_prev
+
+        add_before_link = odict_map[link_prev.key]
+
+        link.prev = add_before_link.prev
+        link.next = add_before_link
+        add_before_link.prev = link
+        link.prev.next = link
+
+        if root.next is add_before_link:
+            root.next = link

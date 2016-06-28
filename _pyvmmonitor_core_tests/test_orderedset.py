@@ -47,3 +47,15 @@ def test_ordered_set():
     assert list(reversed(s)) == list(reversed(expected))
     s.discard(8)
     assert list(s) == [5, 4, 9, 3]
+
+    s.move_to_end(4)
+    assert list(s) == [5, 9, 3, 4]
+
+    s.move_to_beginning(4)
+    assert list(s) == [4, 5, 9, 3]
+
+    s.move_to_previous(5)
+    assert list(s) == [5, 4, 9, 3]
+
+    s.move_to_previous(5)
+    assert list(s) == [5, 4, 9, 3]
