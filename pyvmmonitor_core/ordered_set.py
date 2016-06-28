@@ -94,6 +94,12 @@ class OrderedSet(collections.MutableSet):
         return '{%s}' % (', '.join(map(repr, iter(self))))
 
     def popitem(self, last=True):
+        ret = self.pop(last)
+        # Kept for backward compatibility (was returning popitem from odict mapping key=key).
+        # Should probably be deprecated going forward.
+        return ret, ret
+
+    def pop(self, last=True):
         if last:
             node = self._end.prev()
         else:
@@ -101,7 +107,9 @@ class OrderedSet(collections.MutableSet):
 
         if node is self._end:
             raise KeyError('empty')
-        self.discard(node.el)
+        ret = node.el
+        self.discard(ret)
+        return ret
 
     def insert_before(self, key_before, el):
         '''
@@ -148,3 +156,17 @@ class OrderedSet(collections.MutableSet):
             before_key = node.next().next().el
             self.discard(el)
             self.insert_before(before_key, el)
+
+    def get_previous(self, el):
+        node = self._dict[el]
+        prev = node.prev()
+        if prev is self._end:
+            return None
+        return prev.el
+
+    def get_next(self, el):
+        node = self._dict[el]
+        next_node = node.next()
+        if next_node is self._end:
+            return None
+        return next_node.el
