@@ -134,10 +134,32 @@ def test_ordered_set2():
     s.discard(Stub(1))
     assert list(s) == [Stub(2), Stub(3)]
 
+    s.move_to_next(Stub(2))
+    assert list(s) == [Stub(3), Stub(2)]
+
+    s.move_to_previous(Stub(2))
+    assert list(s) == [Stub(2), Stub(3)]
+
     s.discard(Stub(3))
     assert list(s) == [Stub(2)]
 
     s.discard(Stub(2))
+    assert list(s) == []
+
+    s.add(Stub(1))
+    s.insert_after(Stub(1), Stub(2))
+    assert list(s) == [Stub(1), Stub(2)]
+
+    s.insert_after(Stub(1), Stub(3))
+    assert list(s) == [Stub(1), Stub(3), Stub(2)]
+
+    s.pop()
+    assert list(s) == [Stub(1), Stub(3)]
+
+    s.pop()
+    assert list(s) == [Stub(1)]
+
+    s.pop()
     assert list(s) == []
 
     assert len(Stub.created) == 0, 'Stub objects not garbage-collected!'

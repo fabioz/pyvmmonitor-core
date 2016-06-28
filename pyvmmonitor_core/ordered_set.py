@@ -16,6 +16,8 @@ class OrderedSet(collections.MutableSet):
 
     self._end.next is actually the first element of the internal double linked list
     self._end.prev is the last element
+
+    Almost all operations should be fast O(1), except "index, item_at", which are O(n):
     '''
 
     def __init__(self, initial=()):
@@ -48,6 +50,7 @@ class OrderedSet(collections.MutableSet):
                 self.add(e)
 
     def index(self, elem):
+        # Note: this is a slow operation!
         for i, el in enumerate(self):
             if el == elem:
                 return i
@@ -79,6 +82,7 @@ class OrderedSet(collections.MutableSet):
             entry.next().prev = entry.prev
 
     def item_at(self, i):
+        # Note: this is a slow operation!
         for k, el in enumerate(self):
             if i == k:
                 return el
@@ -111,24 +115,43 @@ class OrderedSet(collections.MutableSet):
         self.discard(ret)
         return ret
 
-    def insert_before(self, key_before, el):
+    def insert_before(self, el_before, el):
         '''
-        Insert el before key_before
+        Insert el before el_before
         '''
         assert el not in self._dict
-        assert key_before in self._dict
+        assert el_before in self._dict
 
         new_link = _Node()
         new_link.el = el
         self._dict[el] = new_link
 
-        add_before_link = self._dict[key_before]
+        add_before_link = self._dict[el_before]
 
         new_link.prev = add_before_link.prev
         new_link.next = ref(add_before_link)
         new_link_ref = ref(new_link)
         add_before_link.prev = new_link_ref
         new_link.prev().next = new_link_ref
+
+    def insert_after(self, el_after, el):
+        '''
+        Insert el after el_after
+        '''
+        assert el not in self._dict
+        assert el_after in self._dict
+
+        new_link = _Node()
+        new_link.el = el
+        self._dict[el] = new_link
+
+        add_after_link = self._dict[el_after]
+
+        new_link.next = add_after_link.next
+        new_link.prev = ref(add_after_link)
+        new_link_ref = ref(new_link)
+        add_after_link.next = new_link_ref
+        new_link.next().prev = new_link_ref
 
     def move_to_beginning(self, el):
         self.discard(el)
@@ -153,9 +176,9 @@ class OrderedSet(collections.MutableSet):
     def move_to_next(self, el):
         node = self._dict[el]
         if len(self._dict) > 1 and self._end.prev().el != el:
-            before_key = node.next().next().el
+            after_key = node.next().el
             self.discard(el)
-            self.insert_before(before_key, el)
+            self.insert_after(after_key, el)
 
     def get_previous(self, el):
         node = self._dict[el]
