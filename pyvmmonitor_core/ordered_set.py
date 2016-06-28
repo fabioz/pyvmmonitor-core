@@ -1,19 +1,42 @@
-# License: LGPL
+# License: MIT
 #
 # Copyright: Brainwy Software
 
 import collections
 
 
-from pyvmmonitor_core import compat
+class _Node(object):
+    __slots__ = ['prev', 'next', 'el']
 
 
 class OrderedSet(collections.MutableSet):
+    '''
+    Some notes:
+
+    root.next is actually the first element of the internal double linked list
+    root.prev is the last element
+    '''
 
     def __init__(self, initial=()):
-        self._dict = collections.OrderedDict()
+        root = self._end = _Node()
+
+        root.prev = root
+        root.next = root
+        self._dict = {}
+
         for a in initial:
             self.add(a)
+
+    def add(self, el):
+        if el not in self._dict:
+            node = _Node()
+            node.el = el
+
+            root = self._end
+            curr = root.prev
+            node.prev = curr
+            node.next = root
+            curr.next = root.prev = self._dict[el] = node
 
     def update(self, *args):
         for s in args:
@@ -21,89 +44,94 @@ class OrderedSet(collections.MutableSet):
                 self.add(e)
 
     def index(self, elem):
-        for i, key in enumerate(compat.iterkeys(self._dict)):
-            if key == elem:
+        for i, el in enumerate(self):
+            if el == elem:
                 return i
         return -1
 
     def __contains__(self, x):
         return x in self._dict
 
-    def __reversed__(self):
-        return reversed(self._dict)
-
     def __iter__(self):
-        return iter(self._dict)
+        root = self._end
+        node = root.next
+
+        while node is not root:
+            yield node.el
+            node = node.next
+
+    def __reversed__(self):
+        root = self._end
+        curr = root.prev
+        while curr is not root:
+            yield curr.el
+            curr = curr.prev
+
+    def discard(self, el):
+        entry = self._dict.pop(el, None)
+        if entry is not None:
+            entry.prev.next = entry.next
+            entry.next.prev = entry.prev
+
+    def item_at(self, i):
+        for k, el in enumerate(self):
+            if i == k:
+                return el
+        raise IndexError(i)
 
     def __len__(self):
         return len(self._dict)
 
-    def item_at(self, i):
-        return compat.keys(self._dict)[i]
-
-    def add(self, elem):
-        self._dict[elem] = None
-
-    def discard(self, elem):
-        self._dict.pop(elem, None)
-
     def __repr__(self):
-        return 'OrderedSet([%s])' % (', '.join(map(repr, compat.iterkeys(self._dict))))
+        return 'OrderedSet([%s])' % (', '.join(map(repr, iter(self))))
 
     def __str__(self):
-        return '{%s}' % (', '.join(map(repr, compat.iterkeys(self._dict))))
+        return '{%s}' % (', '.join(map(repr, iter(self))))
 
     def popitem(self, last=True):
-        return self._dict.popitem(last=last)
+        if last:
+            node = self._end.prev
+        else:
+            node = self._end.next
 
-    def insert_before(self, key, elem):
-        assert elem not in self
+        if node is self._end:
+            raise KeyError('empty')
+        self.discard(node.el)
 
-        self._dict._OrderedDict__map[elem] = new_link = collections._Link()
-        new_link.key = elem
+    def insert_before(self, key_before, el):
+        '''
+        Insert el before key_before
+        '''
+        assert el not in self._dict
+        assert key_before in self._dict
 
-        odict_map = self._dict._OrderedDict__map
-        odict_map[elem] = new_link
-        dict.__setitem__(self._dict, elem, None)
-        add_before_link = odict_map[key]
+        new_link = _Node()
+        new_link.el = el
+        self._dict[el] = new_link
+
+        add_before_link = self._dict[key_before]
 
         new_link.prev = add_before_link.prev
         new_link.next = add_before_link
         add_before_link.prev = new_link
         new_link.prev.next = new_link
 
-        root = self._dict._OrderedDict__root
+    def move_to_beginning(self, el):
+        self.discard(el)
+        if not self._dict:
+            self.add(el)
+        else:
+            root = self._end
+            node = root.next
+            self.insert_before(node.el, el)
 
-        if root.next is add_before_link:
-            root.next = new_link
+    def move_to_end(self, el):
+        self.discard(el)
+        self.add(el)
 
-    def move_to_end(self, key):
-        self._dict.move_to_end(key)
-
-    def move_to_beginning(self, key):
-        self._dict.move_to_end(key, last=False)
-
-    def move_to_previous(self, key):
-        odict_map = self._dict._OrderedDict__map
-        root = self._dict._OrderedDict__root
-
-        link = odict_map[key]
-
-        if root.next is link:
-            # Already first
-            return
-
-        link_prev = link.prev
-        link_next = link.next
-        link_prev.next = link_next
-        link_next.prev = link_prev
-
-        add_before_link = odict_map[link_prev.key]
-
-        link.prev = add_before_link.prev
-        link.next = add_before_link
-        add_before_link.prev = link
-        link.prev.next = link
-
-        if root.next is add_before_link:
-            root.next = link
+    def move_to_previous(self, el):
+        node = self._dict[el]
+        if len(self._dict) > 1 and self._end.next.el != el:
+            before_key = node.prev.el
+            self.discard(el)
+            self.insert_before(before_key, el)
