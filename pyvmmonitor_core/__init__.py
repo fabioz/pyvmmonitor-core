@@ -1,48 +1,51 @@
 # License: LGPL
 #
 # Copyright: Brainwy Software
+from functools import wraps
+import sys
 
 
-def overrides(method):
+def overrides(method_overridden):
     '''
     This is just an 'annotation' method to say that some method is overridden.
 
     It also checks that the method name is the same.
     '''
     def wrapper(func):
-        if func.__name__ != method.__name__:
+        if func.__name__ != method_overridden.__name__:
             msg = "Wrong @overrides: %r expected, but overwriting %r."
-            msg = msg % (func.__name__, method.__name__)
+            msg = msg % (func.__name__, method_overridden.__name__)
             raise AssertionError(msg)
 
         if func.__doc__ is None:
-            func.__doc__ = method.__doc__
+            # inherit docs if it's not there already.
+            func.__doc__ = method_overridden.__doc__
 
         return func
 
     return wrapper
 
 
-def implements(method):
+def implements(method_implemented):
     '''
     This is just an 'annotation' method to say that some method is implemented.
 
     It also checks that the method name is the same.
     '''
+
     def wrapper(func):
-        if func.__name__ != method.__name__:
+        if func.__name__ != method_implemented.__name__:
             msg = "Wrong @implements: %r expected, but implementing %r."
-            msg = msg % (func.__name__, method.__name__)
+            msg = msg % (func.__name__, method_implemented.__name__)
             raise AssertionError(msg)
 
         if func.__doc__ is None:
-            func.__doc__ = method.__doc__
+            # inherit docs if it's not there already.
+            func.__doc__ = method_implemented.__doc__
 
         return func
 
     return wrapper
-
-import sys
 
 
 def is_frozen():
@@ -67,11 +70,28 @@ def abstract(func):
     Marks some method as abstract (meaning it has to be overridden in a subclass).
     '''
 
+    @wraps(func)
     def wrapper(self, *args, **kwargs):
         msg = 'Method %r must be implemented in class %r.' % (func.__name__, self.__class__)
         raise NotImplementedError(msg)
 
-    wrapper.__name__ = func.__name__
-    if func.__doc__ is not None:
-        wrapper.__doc__ = func.__doc__
     return wrapper
+
+
+if __name__ == '__main__':
+
+    class A(object):
+        def m1(self):
+            pass
+
+    class B(A):
+
+        @overrides(A.m1)
+        def m1(self):
+            pass
+
+        @abstract
+        def m2(self):
+            pass
+
+    assert B.m1.__name__ == 'm1'
