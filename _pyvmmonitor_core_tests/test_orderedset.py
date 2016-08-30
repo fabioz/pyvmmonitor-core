@@ -114,6 +114,9 @@ def test_ordered_set():
     assert s.get_next(Stub(4)) == Stub(5)
     assert s.get_next(Stub(3)) is None
 
+    assert s.item_at(-1) == Stub(3)
+    assert s.item_at(-2) == Stub(9)
+
     s.clear()
     assert len(Stub.created) == 0, 'Stub objects not garbage-collected!'
 
