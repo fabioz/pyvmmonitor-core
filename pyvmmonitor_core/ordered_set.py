@@ -82,8 +82,14 @@ class OrderedSet(collections.MutableSet):
             entry.next().prev = entry.prev
 
     def item_at(self, i):
-        # Note: this is a slow operation!
-        for k, el in enumerate(self):
+        if i < 0:
+            it = reversed(self)
+            i = abs(i) - 1
+        else:
+            it = self
+
+        # Note: this is a slow operation (unless it's something as i = 0 or i = -1)
+        for k, el in enumerate(it):
             if i == k:
                 return el
         raise IndexError(i)
