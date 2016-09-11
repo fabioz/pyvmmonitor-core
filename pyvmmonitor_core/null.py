@@ -49,4 +49,10 @@ class Null:
     def __iter__(self):
         return iter(())
 
+    def __enter__(self, *args, **kwargs):
+        pass
+
+    def __exit__(self, *args, **kwargs):
+        pass
+
 NULL = Null()  # Constant instance
