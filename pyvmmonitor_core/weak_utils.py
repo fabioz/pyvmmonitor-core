@@ -33,7 +33,8 @@ def assert_weakref_none(ref):
 
     import sys
 
-    sys.exc_clear()
+    if hasattr(sys, 'exc_clear'):
+        sys.exc_clear()
     r = ref()
     if r is None:
         return
