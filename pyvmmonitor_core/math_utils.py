@@ -118,3 +118,22 @@ class Bounds(object):
         yield self.y1
         yield self.x2 - self.x1
         yield self.y2 - self.y1
+
+    def enlarge(self, increment):
+        if self.is_valid():
+            self.x1 -= increment
+            self.x2 += increment
+
+            self.y1 -= increment
+            self.y2 += increment
+
+    def scale(self, scale):
+        if self.is_valid():
+            diff_x = abs(self.width * scale) / 2.
+            diff_y = abs(self.height * scale) / 2.
+
+            self.x1 -= diff_x
+            self.x2 += diff_x
+
+            self.y1 -= diff_y
+            self.y2 += diff_y
