@@ -1,3 +1,8 @@
+# License: LGPL
+#
+# Copyright: Brainwy Software
+
+
 def remove_duplicates(iterable, ret_type=list):
     '''
     Removes duplicate keeping order (and creating a new instance of the returned type).
