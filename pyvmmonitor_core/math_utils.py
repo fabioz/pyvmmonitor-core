@@ -137,3 +137,8 @@ class Bounds(object):
 
             self.y1 -= diff_y
             self.y2 += diff_y
+
+    def __str__(self):
+        return 'Bounds(x1=%s, y1=%s, x2=%s, y2=%s)' % (self.x1, self.y1, self.x2, self.y2)
+
+    __repr__ = __str__
