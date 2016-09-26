@@ -61,6 +61,16 @@ class Bounds(object):
     x2 = MIN_FLOAT
     y2 = MIN_FLOAT
 
+    def __init__(self, x1=None, y1=None, x2=None, y2=None):
+        if x1 is not None:
+            self.x1 = x1
+        if x2 is not None:
+            self.x2 = x2
+        if y1 is not None:
+            self.y1 = y1
+        if y2 is not None:
+            self.y2 = y2
+
     def add_point(self, point):
         x, y = point
         if x < self.x1:
@@ -142,3 +152,12 @@ class Bounds(object):
         return 'Bounds(x1=%s, y1=%s, x2=%s, y2=%s)' % (self.x1, self.y1, self.x2, self.y2)
 
     __repr__ = __str__
+
+    def __eq__(self, o):
+        if isinstance(o, Bounds):
+            return list(self) == list(o)
+
+        return False
+
+    def __ne__(self, o):
+        return not self == o
