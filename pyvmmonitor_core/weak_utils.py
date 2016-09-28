@@ -154,3 +154,28 @@ class WeakOrderedSet(object):
         for _k in self:
             i += 1
         return i
+
+
+class NamedWeakMethod(object):
+
+    def __init__(self, obj, method_name):
+        self.obj = get_weakref(obj)
+        self.method_name = method_name
+
+    def __call__(self):
+        obj = self.obj()
+        if obj is None:
+            return
+        getattr(obj, self.method_name)()
+
+    def __hash__(self, *args, **kwargs):
+        return hash(self.method_name)
+
+    def __eq__(self, o):
+        if isinstance(o, NamedWeakMethod):
+            return self.method_name == o.method_name and self.obj() == o.obj()
+
+        return False
+
+    def __ne__(self, o):
+        return not self == o
