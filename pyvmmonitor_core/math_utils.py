@@ -34,6 +34,18 @@ def calc_angle_in_radians(p0, p1):
     return theta
 
 
+def is_clockwise(points):
+    '''
+    Note: considers 0,0 to be at the top-left corner, with values
+    increasing to the bottom/right (at qt uses in the graphics view).
+    '''
+    from . import iterables
+    v = 0
+    for p1, p2 in iterables.iter_curr_and_next_closed_cycle(points):
+        v += ((p2[0] - p1[0]) * (p1[1] + p2[1]))
+    return v < 0
+
+
 def create_point(base_point, angle_in_radians, distance):
     '''
     Creates a new point from an angle and a distance from a base point.
