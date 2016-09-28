@@ -1,8 +1,7 @@
-from pyvmmonitor_core import overrides
 
 
-def test_disposable(capsys):
-
+def test_disposable():
+    from pyvmmonitor_core import overrides
     from pyvmmonitor_core.disposable import Disposable
 
     disposed = []
@@ -14,16 +13,5 @@ def test_disposable(capsys):
             disposed.append(1)
 
     d = MyDisposable()
-    del d
-
-    out, err = capsys.readouterr()
-    assert 'not properly disposed before being collected' in err
-    assert out == ''
-    assert not disposed
-
-    d = MyDisposable()
     d.dispose()
-    del d
-    out, err = capsys.readouterr()
-    assert out == err == ''
     assert disposed == [1]
