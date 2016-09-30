@@ -1,3 +1,8 @@
+# License: LGPL
+#
+# Copyright: Brainwy Software
+
+
 def remove_duplicates(iterable, ret_type=list):
     '''
     Removes duplicate keeping order (and creating a new instance of the returned type).
@@ -16,3 +21,13 @@ def count_iterable(iterable):
     for _x in iterable:
         i += 1
     return i
+
+
+def iter_curr_and_next_closed_cycle(lst):
+    '''
+    Provides an iterator which will give items with the curr and next value (repeating the
+    first when the end is reached).
+
+    i.e.: if lst == [1, 2, 3], will iterate with [(1, 2), (2, 3), (3, 1)]
+    '''
+    return zip(lst, lst[1:] + [lst[0]])
