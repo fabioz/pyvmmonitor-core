@@ -30,4 +30,7 @@ def iter_curr_and_next_closed_cycle(lst):
 
     i.e.: if lst == [1, 2, 3], will iterate with [(1, 2), (2, 3), (3, 1)]
     '''
-    return zip(lst, lst[1:] + [lst[0]])
+    if lst.__class__ == tuple:
+        return zip(lst, lst[1:] + (lst[0],))
+    else:
+        return zip(lst, lst[1:] + [lst[0]])

@@ -130,7 +130,8 @@ class PluginManager(object):
 
         Also, the instance will have its 'pm' attribute set to be this plugin manager.
         '''
-        assert not self.exited
+        if self.exited:
+            raise AssertionError('PluginManager already exited')
         try:
             return self._ep_to_context_to_instance[ep][context]
         except:
