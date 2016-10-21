@@ -72,6 +72,7 @@ class Bounds(object):
     y1 = MAX_FLOAT
     x2 = MIN_FLOAT
     y2 = MIN_FLOAT
+    _immutable = False
 
     def __init__(self, x1=None, y1=None, x2=None, y2=None):
         if x1 is not None:
@@ -84,6 +85,9 @@ class Bounds(object):
             self.y2 = y2
 
     def add_point(self, point):
+        if self._immutable:
+            raise AssertionError('Bounds currently immutable.')
+
         x, y = point
         if x < self.x1:
             self.x1 = x
@@ -141,7 +145,13 @@ class Bounds(object):
         yield self.x2 - self.x1
         yield self.y2 - self.y1
 
+    def copy(self):
+        return Bounds(self.x1, self.y1, self.x2, self.y2)
+
     def enlarge(self, increment):
+        if self._immutable:
+            raise AssertionError('Bounds currently immutable.')
+
         if self.is_valid():
             self.x1 -= increment
             self.x2 += increment
@@ -149,7 +159,15 @@ class Bounds(object):
             self.y1 -= increment
             self.y2 += increment
 
+    def enlarged(self, increment):
+        cp = self.copy()
+        cp.enlarge(increment)
+        return cp
+
     def scale(self, scale):
+        if self._immutable:
+            raise AssertionError('Bounds currently immutable.')
+
         if self.is_valid():
             diff_x = abs(self.width * scale) / 2.
             diff_y = abs(self.height * scale) / 2.
@@ -159,6 +177,11 @@ class Bounds(object):
 
             self.y1 -= diff_y
             self.y2 += diff_y
+
+    def scaled(self, scale):
+        cp = self.copy()
+        cp.scale(scale)
+        return cp
 
     def __str__(self):
         return 'Bounds(x1=%s, y1=%s, x2=%s, y2=%s)' % (self.x1, self.y1, self.x2, self.y2)
@@ -173,3 +196,6 @@ class Bounds(object):
 
     def __ne__(self, o):
         return not self == o
+
+    def make_immutable(self):
+        self._immutable = True
