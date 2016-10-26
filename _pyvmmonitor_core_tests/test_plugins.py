@@ -1,5 +1,6 @@
 import pytest
 
+from pyvmmonitor_core.callback import Callback
 from pyvmmonitor_core.plugins import PluginManager, NotRegisteredError,\
     InstanceAlreadyRegisteredError
 
@@ -24,8 +25,14 @@ class EPBar(object):
 
 class FooImpl(EPFoo):
 
+    def __init__(self):
+        self.exited = Callback()
+
     def Foo(self):
         self.foo = True
+
+    def plugins_exit(self):
+        self.exited(self)
 
 
 class AnotherFooImpl(EPFoo):
@@ -63,3 +70,18 @@ def test_plugins():
     assert len(list(pm.iter_existing_instances(EPFoo))) == 2
     assert set(pm.iter_existing_instances(EPFoo)) == set(
         [pm.get_instance(EPFoo, context='context2'), pm.get_instance(EPFoo)])
+
+
+def test_plugins_exit():
+    pm = PluginManager()
+    pm.register(EPFoo, '_pyvmmonitor_core_tests.test_plugins.FooImpl', keep_instance=True)
+    f1 = pm.get_instance(EPFoo)
+    f2 = pm.get_instance(EPFoo, 'bar')
+    exited = []
+
+    def on_exit(s):
+        exited.append(s)
+    f1.exited.register(on_exit)
+    f2.exited.register(on_exit)
+    pm.exit()
+    assert set(exited) == set([f1, f2])

@@ -167,13 +167,14 @@ class PluginManager(object):
     def exit(self):
         try:
             self.on_about_to_exit()
-            for instance in list(self._ep_to_context_to_instance.values()):
-                if hasattr(instance, 'plugins_exit'):
-                    try:
-                        instance.plugins_exit()
-                    except:
-                        import traceback
-                        traceback.print_exc()
+            for ctx in compat.values(self._ep_to_context_to_instance):
+                for instance in compat.values(ctx):
+                    if hasattr(instance, 'plugins_exit'):
+                        try:
+                            instance.plugins_exit()
+                        except:
+                            import traceback
+                            traceback.print_exc()
         finally:
             self.exited = True
             self._ep_to_context_to_instance.clear()

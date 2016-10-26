@@ -95,11 +95,13 @@ class Disposable(object):
 
         self._msg_callback = _Warn(msg)
         import atexit
-        atexit.register(self._msg_callback)
+        if hasattr(atexit, 'unregister'):
+            atexit.register(self._msg_callback)
 
     def dispose(self):
         import atexit
-        atexit.unregister(self._msg_callback)
+        if hasattr(atexit, 'unregister'):
+            atexit.unregister(self._msg_callback)
         try:
             self._on_dispose()
         finally:
