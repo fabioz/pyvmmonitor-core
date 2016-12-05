@@ -85,3 +85,32 @@ def test_plugins_exit():
     f2.exited.register(on_exit)
     pm.exit()
     assert set(exited) == set([f1, f2])
+
+
+def test_inject():
+    pm = PluginManager()
+    pm.register(EPFoo, '_pyvmmonitor_core_tests.test_plugins.FooImpl', keep_instance=True)
+
+    from pyvmmonitor_core.plugins import inject
+
+    @inject(foo=EPFoo)
+    def m1(foo, pm):
+        return foo
+
+    assert m1(pm=pm) == pm.get_instance(EPFoo)
+
+
+def test_inject_class():
+    pm = PluginManager()
+    pm.register(EPFoo, '_pyvmmonitor_core_tests.test_plugins.FooImpl', keep_instance=True)
+    pm.register(EPBar, '_pyvmmonitor_core_tests.test_plugins.FooImpl', keep_instance=False)
+    pm.register(EPBar, '_pyvmmonitor_core_tests.test_plugins.AnotherFooImpl', keep_instance=False)
+
+    from pyvmmonitor_core.plugins import inject
+
+    @inject(foo=EPFoo, foo2=[EPBar])
+    def m1(foo, foo2, pm):
+        return foo, foo2
+
+    assert m1(pm=pm)[0] == pm.get_instance(EPFoo)
+    assert len(m1(pm=pm)[1]) == 2

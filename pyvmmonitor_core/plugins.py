@@ -2,6 +2,36 @@
 #
 # Copyright: Brainwy Software
 
+'''
+To use, create the extension points you want (any class starting with 'EP') and register
+implementations for those.
+
+I.e.:
+
+pm = PluginManager()
+pm.register(EPFoo, '_pyvmmonitor_core_tests.test_plugins.FooImpl', keep_instance=True)
+pm.register(EPBar, '_pyvmmonitor_core_tests.test_plugins.BarImpl', keep_instance=False)
+
+Then, later, to use it it's possible to ask for instances through the PluginManager API:
+
+foo_instances = pm.get_implementations(EPFoo) # Each time this is called, new
+                                              # foo_instances will be created
+bar_instance = pm.get_instance(EPBar) # Each time this is called, the same bar_instance is returned.
+
+Alternatively, it's possible to use a decorator to use a dependency injection pattern -- i.e.:
+don't call me, I'll call you ;)
+
+@inject(foo_instance=EPFoo, bar_instances=[EPBar])
+def m1(foo_instance, bar_instances, pm):
+    for bar in bar_instances:
+        ...
+
+    foo_instance.foo
+
+'''
+
+import functools
+
 from pyvmmonitor_core import compat
 from pyvmmonitor_core.callback import Callback
 from pyvmmonitor_core.weak_utils import get_weakref
@@ -96,7 +126,8 @@ class PluginManager(object):
                 impls = register_at[(ep, context)] = []
             else:
                 raise InstanceAlreadyRegisteredError(
-                    'Unable to override when instance is kept and an implementation is already registered.')
+                    'Unable to override when instance is kept and an implementation '
+                    'is already registered.')
         else:
             register_at = self._ep_to_impls
             impls = register_at.get(ep)
@@ -179,3 +210,27 @@ class PluginManager(object):
             self.exited = True
             self._ep_to_context_to_instance.clear()
             self._ep_to_impls.clear()
+
+
+def inject(**inject_kwargs):
+
+    def decorator(func):
+
+        @functools.wraps(func)
+        def final_dec(**kwargs):
+            pm = kwargs.get('pm')
+            if pm is None:
+                raise AssertionError(
+                    'pm argument with PluginManager not passed (required for @inject).')
+
+            for key, val in compat.iteritems(inject_kwargs):
+                if key not in kwargs:
+                    if val.__class__ is list:
+                        kwargs[key] = pm.get_implementations(val[0])
+                    else:
+                        kwargs[key] = pm.get_instance(val)
+            return func(**kwargs)
+
+        return final_dec
+
+    return decorator
