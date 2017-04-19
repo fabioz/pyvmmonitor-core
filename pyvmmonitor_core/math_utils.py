@@ -135,6 +135,8 @@ class Bounds(object):
         |              |
         |              |
         1 ------------ 2
+
+        :rtype: tuple(tuple(float,float),tuple(float,float),tuple(float,float),tuple(float,float))
         '''
         return ((self.x1, self.y1), (self.x1, self.y2), (self.x2, self.y2), (self.x2, self.y1))
 
