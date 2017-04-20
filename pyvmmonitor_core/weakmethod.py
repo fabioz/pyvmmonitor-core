@@ -79,7 +79,7 @@ class WeakMethod(object):
     def __eq__(self, other):
         try:
             return isinstance(self, type(other)) and self() == other()
-        except:
+        except Exception:
             return False
 
     def __ne__(self, other):
@@ -113,17 +113,26 @@ class WeakMethodProxy(WeakMethod):
     arguments. If the referent's object no longer lives, ReferenceError is raised.
     '''
 
+    def __init__(self, method, throw_error_if_called_when_dead=False):
+        WeakMethod.__init__(self, method)
+        self._throw_error_if_called_when_dead = throw_error_if_called_when_dead
+
     def __call__(self, *args, **kwargs):
         func = WeakMethod.__call__(self)
         if func is None:
-            raise ReferenceError('Object is dead. Was of class: %s' % (self._class,))
+            if self._throw_error_if_called_when_dead:
+                raise ReferenceError('Object is dead. Was of class: %s' % (self._class,))
         else:
             return func(*args, **kwargs)
+
+    def __hash__(self):
+        # If __eq__ is redefined, __hash__ also needs to be redefined.
+        return WeakMethod.__hash__(self)
 
     def __eq__(self, other):
         try:
             func1 = WeakMethod.__call__(self)
             func2 = WeakMethod.__call__(other)
             return isinstance(self, type(other)) and func1 == func2
-        except:
+        except Exception:
             return False
