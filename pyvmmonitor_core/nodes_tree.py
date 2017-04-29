@@ -25,12 +25,6 @@ class Node(object):
             count += len(c)
         return count
 
-
-class NodesTree(Node):  # Special node with no associated data
-
-    def __init__(self):
-        Node.__init__(self, None)
-
     def print_rep(self, node=None, level=0, stream=None):
         if stream is None:
             stream = sys.stderr
@@ -48,3 +42,9 @@ class NodesTree(Node):  # Special node with no associated data
         s = StringIO()
         self.print_rep(stream=s)
         return s.getvalue()
+
+
+class NodesTree(Node):  # Special node with no associated data
+
+    def __init__(self):
+        Node.__init__(self, None)
