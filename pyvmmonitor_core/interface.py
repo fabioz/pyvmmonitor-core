@@ -125,7 +125,7 @@ def is_implementation(cls_or_obj, interface_class):
     return details.is_impl
 
 
-def check_implements(interface_class):
+def check_implements(*interface_classes):
     '''
     To be used as decorator:
 
@@ -139,6 +139,7 @@ def check_implements(interface_class):
 
     '''
     def func(cls):
-        assert_implements(cls, interface_class)
+        for interface_class in interface_classes:
+            assert_implements(cls, interface_class)
         return cls
     return func
