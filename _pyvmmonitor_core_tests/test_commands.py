@@ -8,7 +8,7 @@ def test_commands_params():
         copied.append(param)
 
     commands_manager = create_default_commands_manager()
-    commands_manager.register_command('copy')
+    commands_manager.register_command('copy', 'Copy')
     commands_manager.activate('copy', param=2)
     assert copied == []  # Default handler does nothing
 
@@ -31,7 +31,7 @@ def test_commands():
         copied.append(2)
 
     commands_manager = create_default_commands_manager()
-    commands_manager.register_command('copy')
+    commands_manager.register_command('copy', 'Copy')
     commands_manager.activate('copy')
     assert copied == []
 
@@ -65,3 +65,6 @@ def test_commands():
 
     with pytest.raises(CommandUndefinedEror):
         commands_manager.activate('invalid')
+
+    with pytest.raises(RuntimeError):
+        commands_manager.register_command('copy', 'Foo')

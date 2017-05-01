@@ -1,6 +1,9 @@
+from collections import namedtuple
+
 from pyvmmonitor_core import implements, interface
 
-_DEFAULT_SCOPE = 'default_scope'
+
+DEFAULT_SCOPE = 'default_scope'
 
 
 class ICommandsManager(object):
@@ -13,7 +16,7 @@ class ICommandsManager(object):
 
     # The basic usage is:
 
-    commands_manager.register_command('copy')
+    commands_manager.register_command('copy', 'Copy')
     commands_manager.set_command_handler('copy', copy_to_clipboard)
     commands_manager.activate('copy')  # activates the copy action
 
@@ -30,13 +33,13 @@ class ICommandsManager(object):
     commands_manager.deactivate_scope('custom_scope')
     '''
 
-    def register_command(self, command_id):
+    def register_command(self, command_id, command_name):
         '''
         Registers a command and makes it available to be activated (if no handler is available
         after being registered, nothing is done if it's activated).
         '''
 
-    def set_command_handler(self, command_id, command_handler, scope=_DEFAULT_SCOPE):
+    def set_command_handler(self, command_id, command_handler, scope=DEFAULT_SCOPE):
         '''
         Sets a handler to the given command id (optionally with a different scope).
 
@@ -90,6 +93,9 @@ class CommandUndefinedEror(Exception):
     pass
 
 
+_CommandInfo = namedtuple('_CommandInfo', ('command_id', 'command_name'))
+
+
 @interface.check_implements(ICommandsManager)
 class _DefaultCommandsManager(object):
     '''
@@ -102,8 +108,9 @@ class _DefaultCommandsManager(object):
 
     def __init__(self):
         self._command_id_to_scopes = {}
-        self._activated_scopes = [_DEFAULT_SCOPE]
-        self._valid_scopes = {_DEFAULT_SCOPE}
+        self._command_id_to_info = {}
+        self._activated_scopes = [DEFAULT_SCOPE]
+        self._valid_scopes = {DEFAULT_SCOPE}
 
     @implements(ICommandsManager.register_scope)
     def register_scope(self, scope):
@@ -126,7 +133,7 @@ class _DefaultCommandsManager(object):
     def deactivate_scope(self, scope):
         from pyvmmonitor_core.list_utils import remove_last_occurrence
 
-        if scope == _DEFAULT_SCOPE:
+        if scope == DEFAULT_SCOPE:
             raise AssertionError('Default scope cannot be deactivated.')
 
         if not remove_last_occurrence(self._activated_scopes, scope):
@@ -135,13 +142,19 @@ class _DefaultCommandsManager(object):
                 (scope, self._activated_scopes))
 
     @implements(ICommandsManager.register_command)
-    def register_command(self, command_id):
+    def register_command(self, command_id, command_name):
+        if command_id in self._command_id_to_info:
+            raise RuntimeError('Command: %s already registered' % (command_id,))
+
+        self._command_id_to_info[command_id] = _CommandInfo(
+            command_id, command_name)
+
         self._command_id_to_scopes[command_id] = {
-            _DEFAULT_SCOPE: _default_noop_handler
+            DEFAULT_SCOPE: _default_noop_handler
         }
 
     @implements(ICommandsManager.set_command_handler)
-    def set_command_handler(self, command_id, command_handler, scope=_DEFAULT_SCOPE):
+    def set_command_handler(self, command_id, command_handler, scope=DEFAULT_SCOPE):
         if scope not in self._valid_scopes:
             raise ValueError('The passed scope (%s) was not registered.' % (scope,))
 
