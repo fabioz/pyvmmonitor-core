@@ -165,7 +165,7 @@ class PluginManager(object):
             raise AssertionError('PluginManager already exited')
         try:
             return self._ep_to_context_to_instance[ep][context]
-        except:
+        except KeyError:
             try:
                 impls = self._ep_to_instance_impls[(ep, context)]
             except KeyError:
@@ -203,7 +203,7 @@ class PluginManager(object):
                     if hasattr(instance, 'plugins_exit'):
                         try:
                             instance.plugins_exit()
-                        except:
+                        except Exception:
                             import traceback
                             traceback.print_exc()
         finally:
