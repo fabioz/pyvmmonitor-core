@@ -1,3 +1,7 @@
+# License: LGPL
+#
+# Copyright: Brainwy Software
+
 '''
 Module with basic functionality for declaring/verifying interfaces on Python.
 
@@ -29,6 +33,11 @@ Alternatively, it's possible to check if some object implements a given interfac
 or assert it:
 
     interface.assert_implements(obj, ISomething)
+
+Note: results are cached for faster access afterwards and the cache-key is the tuple(cls,
+interface), so, classes won't be garbage-collected after a check (usually classes don't die and this
+isn't a problem, but it may be the source of leaks in applications which create classes and expect
+them to die when no longer referenced).
 '''
 
 from collections import namedtuple
@@ -84,23 +93,55 @@ def _impl_details(cls_or_obj, interface_class):
         return ret
 
     cls_methods = _get_methods(cls)
-    for method in _get_methods(interface_class):
-        if method not in cls_methods:
+    for method_name in _get_methods(interface_class):
+        if method_name not in cls_methods:
             found = False
         else:
-            method_in_cls = getattr(cls, method)
-            method_in_interface = getattr(interface_class, method)
+            method_in_cls = getattr(cls, method_name)
+            method_in_interface = getattr(interface_class, method_name)
             if method_in_cls == method_in_interface:
-                found = False  # Interface subclass but doesn't override method.
+                found = False  # Interface subclass but doesn't override method_name.
             else:
                 found = True
 
         if not found:
             impl_details = _cache[key] = ImplDetails(
                 False, '%s.%s not available.\n\nExpected: %s\nto implement: %s\nFrom: %s' %
-                (cls.__name__, method, cls, method, cls))
+                (cls.__name__, method_name, cls, method_name, cls))
 
             return impl_details
+        else:
+            # Let's see if parameters match
+            cls_args, cls_varargs, cls_varkw, cls_defaults = inspect.getargspec(method_in_cls)
+
+            if cls_varargs is not None and cls_varkw is not None:
+                if not cls_args or cls_args == ['self'] or cls_args == ['cls']:
+                    # (*args, **kwargs), (self, *args, **kwargs) and (cls, *args, **kwargs)
+                    # always match
+                    continue
+
+            interf_args, interf_varargs, interf_varkw, interf_defaults = inspect.getargspec(
+                method_in_interface)
+
+            # Now, let's see if parameters actually match the interface parameters.
+            if interf_varargs is not None and cls_varargs is None or \
+                    interf_varkw is not None and cls_varkw is None or \
+                    interf_args != cls_args or \
+                    interf_defaults != cls_defaults:
+                interface_signature = inspect.formatargspec(
+                    interf_args, interf_varargs, interf_varkw, interf_defaults)
+
+                class_signature = inspect.formatargspec(
+                    cls_args, cls_varargs, cls_varkw, cls_defaults)
+
+                msg = ("\nMethod params in %s.%s:\n"
+                       "  %s\ndon't match params in %s.%s\n  %s")
+                msg = msg % (cls.__name__, method_name, class_signature,
+                             interface_class.__name__, method_name, interface_signature)
+
+                impl_details = _cache[key] = ImplDetails(False, msg)
+
+                return impl_details
 
     impl_details = _cache[key] = ImplDetails(True, None)
     return impl_details
@@ -140,6 +181,8 @@ def check_implements(*interface_classes):
     '''
     def func(cls):
         for interface_class in interface_classes:
-            assert_implements(cls, interface_class)
+            details = _impl_details(cls, interface_class)
+            if details.msg:
+                raise BadImplementationError(details.msg)
         return cls
     return func

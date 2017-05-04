@@ -3,9 +3,6 @@ from collections import namedtuple
 from pyvmmonitor_core import implements, interface
 
 
-DEFAULT_SCOPE = 'default_scope'
-
-
 class ICommandsManager(object):
     '''
     The commands manager is an API to be used to create commands, bind commands to handlers and
@@ -33,10 +30,29 @@ class ICommandsManager(object):
     commands_manager.deactivate_scope('custom_scope')
     '''
 
-    def register_command(self, command_id, command_name):
+    DEFAULT_SCOPE = 'default_scope'
+
+    def register_command(self, command_id, command_name, icon=None, status_tip=None):
         '''
         Registers a command and makes it available to be activated (if no handler is available
         after being registered, nothing is done if it's activated).
+
+        :param str command_id:
+        :param str command_name:
+        :param object icon:
+            May be the actual icon or a way to identify it (at core it doesn't make
+            a difference, it just stores the value to be consumed later on).
+        :param str status_tip:
+            A tip for the command (if not given, a default one may be given based on the
+            command_name).
+        '''
+
+    def get_command_info(self, command_id):
+        '''
+        :param str command_id:
+            The command id for which we want the info.
+
+        :return: a namedtuple with command_id, command_name, icon, status_tip
         '''
 
     def set_command_handler(self, command_id, command_handler, scope=DEFAULT_SCOPE):
@@ -93,7 +109,7 @@ class CommandUndefinedEror(Exception):
     pass
 
 
-_CommandInfo = namedtuple('_CommandInfo', ('command_id', 'command_name'))
+_CommandInfo = namedtuple('_CommandInfo', ('command_id', 'command_name', 'icon', 'status_tip'))
 
 
 @interface.check_implements(ICommandsManager)
@@ -109,8 +125,8 @@ class _DefaultCommandsManager(object):
     def __init__(self):
         self._command_id_to_scopes = {}
         self._command_id_to_info = {}
-        self._activated_scopes = [DEFAULT_SCOPE]
-        self._valid_scopes = {DEFAULT_SCOPE}
+        self._activated_scopes = [ICommandsManager.DEFAULT_SCOPE]
+        self._valid_scopes = {ICommandsManager.DEFAULT_SCOPE}
 
     @implements(ICommandsManager.register_scope)
     def register_scope(self, scope):
@@ -133,7 +149,7 @@ class _DefaultCommandsManager(object):
     def deactivate_scope(self, scope):
         from pyvmmonitor_core.list_utils import remove_last_occurrence
 
-        if scope == DEFAULT_SCOPE:
+        if scope == ICommandsManager.DEFAULT_SCOPE:
             raise AssertionError('Default scope cannot be deactivated.')
 
         if not remove_last_occurrence(self._activated_scopes, scope):
@@ -142,19 +158,24 @@ class _DefaultCommandsManager(object):
                 (scope, self._activated_scopes))
 
     @implements(ICommandsManager.register_command)
-    def register_command(self, command_id, command_name):
+    def register_command(self, command_id, command_name, icon=None, status_tip=None):
         if command_id in self._command_id_to_info:
             raise RuntimeError('Command: %s already registered' % (command_id,))
 
         self._command_id_to_info[command_id] = _CommandInfo(
-            command_id, command_name)
+            command_id, command_name, icon, status_tip)
 
         self._command_id_to_scopes[command_id] = {
-            DEFAULT_SCOPE: _default_noop_handler
+            ICommandsManager.DEFAULT_SCOPE: _default_noop_handler
         }
 
+    @implements(ICommandsManager.get_command_info)
+    def get_command_info(self, command_id):
+        return self._command_id_to_info[command_id]
+
     @implements(ICommandsManager.set_command_handler)
-    def set_command_handler(self, command_id, command_handler, scope=DEFAULT_SCOPE):
+    def set_command_handler(self, command_id, command_handler,
+                            scope=ICommandsManager.DEFAULT_SCOPE):
         if scope not in self._valid_scopes:
             raise ValueError('The passed scope (%s) was not registered.' % (scope,))
 

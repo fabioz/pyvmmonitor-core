@@ -31,3 +31,31 @@ def test_interfaces():
         @interface.check_implements(ISomething)
         class NoImplDerivingFromInterface(ISomething):
             pass
+
+
+def test_interfaces_match_params():
+    from pyvmmonitor_core import interface
+    from pyvmmonitor_core.interface import BadImplementationError
+
+    class ISomething(object):
+
+        def m1(self, a):
+            pass
+
+    @interface.check_implements(ISomething)
+    class SomethingImpl(object):
+
+        def m1(self, a):
+            pass
+
+    s = SomethingImpl()
+    assert interface.is_implementation(s, ISomething)
+    assert interface.is_implementation(SomethingImpl, ISomething)
+
+    with pytest.raises(BadImplementationError):
+
+        @interface.check_implements(ISomething)
+        class NoImpl(object):
+
+            def m1(self, bad_param):
+                pass
