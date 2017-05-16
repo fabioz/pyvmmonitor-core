@@ -4,7 +4,7 @@
 
 try:
     import StringIO
-except:
+except Exception:
     import io as StringIO
 import subprocess
 import sys
@@ -108,7 +108,7 @@ class ExecExternal(object):
             finally:
                 self._finished_event.set()
                 self._process = None
-        except:
+        except Exception:
             f = StringIO.StringIO()
             import traceback
             traceback.print_exc(file=f)
@@ -127,7 +127,8 @@ class ExecExternal(object):
             return
         process = self._process
 
-        kill_process(process.pid)
+        if process is not None:
+            kill_process(process.pid)
 
         self._finished_event.set()
         self._process = None
