@@ -87,18 +87,16 @@ class ExecExternal(object):
 
             process = self._process = subprocess.Popen(
                 args=args,
-                bufsize=50,
+                bufsize=1,
                 cwd=self.cwd,
                 env=self.env,
                 universal_newlines=True,
-                stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 startupinfo=startupinfo,
             )
             self.pid = process.pid
 
-            process.stdin.close()
             try:
                 for line in iter(process.stdout.readline, ''):
                     with self._lock:
