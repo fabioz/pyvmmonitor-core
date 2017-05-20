@@ -1,32 +1,58 @@
 # License: LGPL
 #
 # Copyright: Brainwy Software
-
-try:
-    import StringIO
-except Exception:
-    import io as StringIO
 import subprocess
 import sys
 import threading
 
 import psutil
 
+from pyvmmonitor_core.log_utils import get_logger
+
+
+try:
+    import StringIO
+except Exception:
+    import io as StringIO
+
 
 PY2 = sys.version_info[0] < 3
 
+logger = get_logger(__name__)
+
 
 def kill_process(pid, kill_children=True):
-    process = psutil.Process(pid)
+    try:
+        process = psutil.Process(pid)
+    except psutil.NoSuchProcess:
+        logger.info(
+            'Process with pid %s not available to kill (probably died in the meanwhile).',
+            (pid,))
+        return
 
     if kill_children:
         if hasattr(process, 'children'):
             for child in process.children(recursive=True):
-                child.kill()
+                try:
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    logger.info(
+                        'Child process with pid %s not available to kill '
+                        '(probably died in the meanwhile).', (child.pid,))
         else:
             for child in process.get_children(recursive=True):
-                child.kill()
-    process.kill()
+                try:
+                    child.kill()
+                except psutil.NoSuchProcess:
+                    logger.info(
+                        'Child process with pid %s not available to kill '
+                        '(probably died in the meanwhile).', (child.pid,))
+    try:
+        process.kill()
+    except psutil.NoSuchProcess:
+        logger.info(
+            'Process with pid %s not available to kill (probably died in the meanwhile).',
+            (pid,))
 
 
 class ExecExternal(object):
