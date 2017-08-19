@@ -1,4 +1,5 @@
 from pyvmmonitor_core import log_utils
+from pyvmmonitor_core.compat import unicode
 
 
 def test_log_utils(tmpdir):
