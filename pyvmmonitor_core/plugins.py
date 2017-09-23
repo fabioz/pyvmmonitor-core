@@ -38,15 +38,19 @@ from pyvmmonitor_core.weak_utils import get_weakref
 
 
 def load_class(import_class_path):
-    i = import_class_path.rindex('.')
-    modname = import_class_path[:i]
-    import_class_path = import_class_path[i + 1:]
+    initial = import_class_path
+    try:
+        i = import_class_path.rindex('.')
+        modname = import_class_path[:i]
+        import_class_path = import_class_path[i + 1:]
 
-    ret = __import__(modname)
-    for part in modname.split('.')[1:]:
-        ret = getattr(ret, part)
+        ret = __import__(modname)
+        for part in modname.split('.')[1:]:
+            ret = getattr(ret, part)
 
-    ret = getattr(ret, import_class_path)
+        ret = getattr(ret, import_class_path)
+    except (ImportError, AttributeError):
+        raise ImportError('Unable to import: %s' % (initial,))
     return ret
 
 
