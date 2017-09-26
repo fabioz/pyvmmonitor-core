@@ -1,6 +1,17 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
+'''
+To use:
+
+nodes_tree = NodesTree()
+node = nodes_tree.add_child(Node(1))
+node2 = node.add_child(Node(2))
+
+for child in nodes_tree.children:
+    ...
+
+License: LGPL
+
+Copyright: Brainwy Software
+'''
 
 import sys
 

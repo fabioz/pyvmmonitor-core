@@ -3,15 +3,34 @@ Copyright: ESSS - Engineering Simulation and Scientific Software Ltda
 License: LGPL
 
 Based on: https://github.com/ESSS/ben10/blob/master/source/python/ben10/foundation/callback.py
+
+To use a callback do:
+
+class MyObject(object):
+    def receive_notification(self, arg):
+        print('Receive notification: %s' % (arg,))
+
+my_object = MyObject()
+callback = Callback()
+
+# Note: only weak-references are kept (unless it's an unbound method), so, this object is
+# still available for garbage-collection.
+callback.register(my_object.receive_notification)
+
+...
+
+callback(arg=10)
+
+callback.unregister(my_object.receive_notification)
+
 '''
-from collections import OrderedDict as odict
 import sys
 import types
 import weakref
+from collections import OrderedDict as odict
 
 from pyvmmonitor_core import compat
 from pyvmmonitor_core.thread_utils import is_in_main_thread
-
 
 try:
     import new
@@ -197,8 +216,7 @@ class Callback(object):
         for func in to_call:
             try:
                 func(*args, **kwargs)
-            except:
-                # Show it but don't propagate.
+            except Exception:                # Show it but don't propagate.
                 sys.excepthook(*sys.exc_info())
 
     def register(self, func):

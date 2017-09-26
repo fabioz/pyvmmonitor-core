@@ -1,34 +1,35 @@
+'''
+The commands manager is an API to be used to create commands, bind commands to handlers and
+activate them.
+
+It's also possible to bind handlers to a given scope so that they're only active when a scope
+is active.
+
+# The basic usage is:
+
+commands_manager.register_command('copy', 'Copy')
+commands_manager.set_command_handler('copy', copy_to_clipboard)
+commands_manager.activate('copy')  # activates the copy action
+
+# Then, if there was a special copy on some context,
+# one would need to register the scope/handler:
+
+commands_manager.register_scope('custom_scope')
+commands_manager.set_command_handler('copy', copy_to_clipboard, 'custom_scope')
+
+# And then active/deactivate such a context when needed:
+
+commands_manager.activate_scope('custom_scope')
+commands_manager.activate('copy')
+commands_manager.deactivate_scope('custom_scope')
+'''
+
 from collections import namedtuple
 
 from pyvmmonitor_core import implements, interface
 
 
 class ICommandsManager(object):
-    '''
-    The commands manager is an API to be used to create commands, bind commands to handlers and
-    activate them.
-
-    It's also possible to bind handlers to a given scope so that they're only active when a scope
-    is active.
-
-    # The basic usage is:
-
-    commands_manager.register_command('copy', 'Copy')
-    commands_manager.set_command_handler('copy', copy_to_clipboard)
-    commands_manager.activate('copy')  # activates the copy action
-
-    # Then, if there was a special copy on some context,
-    # one would need to register the scope/handler:
-
-    commands_manager.register_scope('custom_scope')
-    commands_manager.set_command_handler('copy', copy_to_clipboard, 'custom_scope')
-
-    # And then active/deactivate such a context when needed:
-
-    commands_manager.activate_scope('custom_scope')
-    commands_manager.activate('copy')
-    commands_manager.deactivate_scope('custom_scope')
-    '''
 
     DEFAULT_SCOPE = 'default_scope'
 

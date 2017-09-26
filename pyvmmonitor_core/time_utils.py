@@ -13,7 +13,7 @@ def time_method(func):
 
     try:
         func_name = func.func_name
-    except:
+    except Exception:
         func_name = func.__name__
 
     def wrap(*args, **kwargs):

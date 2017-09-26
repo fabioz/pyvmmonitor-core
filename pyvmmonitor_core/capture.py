@@ -1,7 +1,3 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
-
 '''
 Helper to capture streams (stdout, stderr).
 
@@ -18,8 +14,12 @@ with capture(('stderr', 'stdout')) as streams:
 
 print(streams.getvalue())
 
+License: LGPL
+
+Copyright: Brainwy Software
 '''
 from __future__ import with_statement
+
 import sys
 
 PY2 = sys.version_info[0] < 3
@@ -44,7 +44,7 @@ class _StreamRedirector:
         for r in self._streams:
             try:
                 r.write(s)
-            except:
+            except Exception:
                 pass
 
     def isatty(self):

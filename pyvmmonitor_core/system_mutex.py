@@ -1,7 +1,3 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
-
 '''
 To use, create a SystemMutex, check if it was acquired (get_mutex_aquired()) and if acquired the
 mutex is kept until the instance is collected or release_mutex is called.
@@ -13,6 +9,10 @@ if mutex.get_mutex_aquired():
     print('acquired')
 else:
     print('not acquired')
+
+License: LGPL
+
+Copyright: Brainwy Software
 '''
 
 import re
@@ -33,6 +33,7 @@ def check_valid_mutex_name(mutex_name):
     if result is not None and len(result) > 0:
         raise AssertionError('Mutex name is invalid: %s' % (mutex_name,))
 
+
 if sys.platform == 'win32':
 
     import os
@@ -44,19 +45,19 @@ if sys.platform == 'win32':
             filename = os.path.join(tempfile.gettempdir(), mutex_name)
             try:
                 os.unlink(filename)
-            except:
+            except Exception:
                 pass
             try:
                 handle = os.open(filename, os.O_CREAT | os.O_EXCL | os.O_RDWR)
                 try:
                     try:
                         pid = str(os.getpid())
-                    except:
+                    except Exception:
                         pid = 'unable to get pid'
                     os.write(handle, pid)
-                except:
+                except Exception:
                     pass  # Ignore this as it's pretty much optional
-            except:
+            except Exception:
                 self._release_mutex = NULL
                 self._acquired = False
             else:
@@ -66,13 +67,13 @@ if sys.platform == 'win32':
                         release_mutex.called = True
                         try:
                             os.close(handle)
-                        except:
+                        except Exception:
                             traceback.print_exc()
                         try:
                             # Removing is optional as we'll try to remove on startup anyways (but
                             # let's do it to keep the filesystem cleaner).
                             os.unlink(filename)
-                        except:
+                        except Exception:
                             pass
 
                 # Don't use __del__: this approach doesn't have as many pitfalls.
@@ -139,12 +140,12 @@ else:  # Linux
             try:
                 handle = open(filename, 'w')
                 fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            except:
+            except Exception:
                 self._release_mutex = NULL
                 self._acquired = False
                 try:
                     handle.close()
-                except:
+                except Exception:
                     pass
             else:
                 def release_mutex(*args, **kwargs):
@@ -153,17 +154,17 @@ else:  # Linux
                         release_mutex.called = True
                         try:
                             fcntl.flock(handle, fcntl.LOCK_UN)
-                        except:
+                        except Exception:
                             traceback.print_exc()
                         try:
                             handle.close()
-                        except:
+                        except Exception:
                             traceback.print_exc()
                         try:
                             # Removing is pretty much optional (but let's do it to keep the
                             # filesystem cleaner).
                             os.unlink(filename)
-                        except:
+                        except Exception:
                             pass
 
                 # Don't use __del__: this approach doesn't have as many pitfalls.

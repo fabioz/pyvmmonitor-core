@@ -3,6 +3,9 @@
 # Copyright: Brainwy Software
 
 '''
+Defines a PluginManager (which doesn't really have plugins, only a registry of extension points
+and implementations for such extension points).
+
 To use, create the extension points you want (any class starting with 'EP') and register
 implementations for those.
 

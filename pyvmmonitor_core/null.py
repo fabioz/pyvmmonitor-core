@@ -46,6 +46,8 @@ class Null:
     def __nonzero__(self):
         return 0
 
+    __bool__ = __nonzero__
+
     def __iter__(self):
         return iter(())
 
@@ -54,5 +56,6 @@ class Null:
 
     def __exit__(self, *args, **kwargs):
         pass
+
 
 NULL = Null()  # Constant instance

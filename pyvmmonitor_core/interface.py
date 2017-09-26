@@ -1,7 +1,3 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
-
 '''
 Module with basic functionality for declaring/verifying interfaces on Python.
 
@@ -38,11 +34,15 @@ Note: results are cached for faster access afterwards and the cache-key is the t
 interface), so, classes won't be garbage-collected after a check (usually classes don't die and this
 isn't a problem, but it may be the source of leaks in applications which create classes and expect
 them to die when no longer referenced).
+
+License: LGPL
+
+Copyright: Brainwy Software
 '''
 
-from collections import namedtuple
 import inspect
 import sys
+from collections import namedtuple
 
 from pyvmmonitor_core.memoization import memoize
 

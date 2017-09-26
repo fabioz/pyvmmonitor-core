@@ -1,6 +1,10 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
+'''
+Helpers for dealing with iterables.
+
+License: LGPL
+
+Copyright: Brainwy Software
+'''
 
 
 def remove_duplicates(iterable, ret_type=list):

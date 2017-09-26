@@ -1,6 +1,13 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
+'''
+Helpers for dealing with launching some external utility and keeping track of its output/killing it
+later on.
+
+see: #ExecExternal docs
+
+License: LGPL
+
+Copyright: Brainwy Software
+'''
 import subprocess
 import sys
 import threading
@@ -8,7 +15,6 @@ import threading
 import psutil
 
 from pyvmmonitor_core.log_utils import get_logger
-
 
 try:
     import StringIO

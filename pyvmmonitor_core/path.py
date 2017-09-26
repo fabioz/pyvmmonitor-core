@@ -1,6 +1,10 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
+'''
+Helpers for os.path which work with bytes and unicode on Python 2/3 considering either '/' or '\\'.
+
+License: LGPL
+
+Copyright: Brainwy Software
+'''
 
 import sys
 

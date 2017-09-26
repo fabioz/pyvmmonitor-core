@@ -1,6 +1,10 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
+'''
+License: LGPL
+
+Copyright: Brainwy Software
+
+Helpers to deal with python2/3.
+'''
 
 import sys
 

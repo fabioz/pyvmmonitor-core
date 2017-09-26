@@ -1,6 +1,11 @@
-# License: LGPL
-#
-# Copyright: Brainwy Software
+'''
+Helpers for dealing with weak-references (with special treatment of bound methods).
+
+
+License: LGPL
+
+Copyright: Brainwy Software
+'''
 
 import inspect
 import weakref
@@ -9,7 +14,7 @@ from pyvmmonitor_core.ordered_set import OrderedSet
 from pyvmmonitor_core.weakmethod import WeakMethod
 
 
-_NONE_LAMDA = lambda: None
+def _NONE_LAMDA(): return None  # @IgnorePep8
 
 
 def get_weakref(obj):

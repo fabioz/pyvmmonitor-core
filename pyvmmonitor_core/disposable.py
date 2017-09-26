@@ -10,9 +10,10 @@ class MyClassWithResources(Disposable):
 obj = MyClassWithResources()
 ...
 obj.dispose()
+
+If the object isn't properly disposed, a print will be given at interpreter shutdown.
 '''
 from __future__ import print_function
-
 
 # This version isn't always correct (when collected during interpreter shutdown it may fail to print).
 # class Disposable(object):

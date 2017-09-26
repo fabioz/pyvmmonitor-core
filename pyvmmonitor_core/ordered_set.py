@@ -1,6 +1,10 @@
-# License: MIT
-#
-# Copyright: Brainwy Software
+'''
+A feature-rich ordered set (which allows reordering internal items).
+
+License: MIT
+
+Copyright: Brainwy Software
+'''
 
 import collections
 from weakref import ref

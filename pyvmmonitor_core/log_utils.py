@@ -1,14 +1,23 @@
 import logging.handlers
 
-
-'''
-Same thing as logging.getLogger, but with a pep-8 alias.
-'''
+# Same thing as logging.getLogger, but with a pep-8 alias.
+#
+# Usually used as:
+#
+# logger = get_logger(__name__)
+#
+# ...
+#
+# logger.warn('Something happened.')
 get_logger = logging.getLogger
 
 
 def config_rotating_file_handler_from_env_var(env_var, log_filename, logger_name=''):
     '''
+    Configures a rotating file handler based on the contents of some environment var which
+    can have a value of the logging preceded by 'ONLY_STDOUT:' to skip putting contents in the
+    log file.
+
     :param env_var:
         The name of the environment variable to check. Valid values for it are:
         'CRITICAL', 'ERROR', 'WARN', 'WARNING', 'INFO', 'DEBUG'
