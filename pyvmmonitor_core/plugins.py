@@ -34,10 +34,16 @@ def m1(foo_instance, bar_instances, pm):
 '''
 
 import functools
+import sys
 
 from pyvmmonitor_core import compat
 from pyvmmonitor_core.callback import Callback
 from pyvmmonitor_core.weak_utils import get_weakref
+
+if sys.version_info[0] >= 3:
+    string_types = (str,)
+else:
+    string_types = (unicode, str)
 
 
 def load_class(import_class_path):
@@ -93,6 +99,7 @@ class PluginManager(object):
         self._ep_to_impls = {}
         self._ep_to_instance_impls = {}
         self._ep_to_context_to_instance = {}
+        self._name_to_ep = {}
         self.exited = False
         self.on_about_to_exit = Callback()
 
@@ -126,6 +133,10 @@ class PluginManager(object):
             If False, it'll only be available through get_implementations.
         '''
         assert not self.exited
+        if ep.__class__ in string_types:
+            raise ValueError('Expected the actual EP class to be passed.')
+        self._name_to_ep[ep.__name__] = ep
+
         if keep_instance:
             register_at = self._ep_to_instance_impls
             impls = register_at.get((ep, context))
@@ -144,6 +155,10 @@ class PluginManager(object):
         impls.append((impl, kwargs))
 
     def set_instance(self, ep, instance, context=None):
+        if ep.__class__ in string_types:
+            raise ValueError('Expected the actual EP class to be passed.')
+        self._name_to_ep[ep.__name__] = ep
+
         instance.pm = get_weakref(self)
         instances = self._ep_to_context_to_instance.get(ep)
         if instances is None:
@@ -151,9 +166,15 @@ class PluginManager(object):
         instances[context] = instance
 
     def iter_existing_instances(self, ep):
+        if ep.__class__ in string_types:
+            ep = self._name_to_ep[ep]
+
         return compat.itervalues(self._ep_to_context_to_instance[ep])
 
     def has_instance(self, ep, context=None):
+        if ep.__class__ in string_types:
+            ep = self._name_to_ep[ep]
+
         try:
             self.get_instance(ep, context)
             return True
@@ -170,6 +191,9 @@ class PluginManager(object):
         '''
         if self.exited:
             raise AssertionError('PluginManager already exited')
+
+        if ep.__class__ in string_types:
+            ep = self._name_to_ep[ep]
         try:
             return self._ep_to_context_to_instance[ep][context]
         except KeyError:

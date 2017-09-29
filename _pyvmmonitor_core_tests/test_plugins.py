@@ -1,8 +1,8 @@
 import pytest
 
 from pyvmmonitor_core.callback import Callback
-from pyvmmonitor_core.plugins import PluginManager, NotRegisteredError,\
-    InstanceAlreadyRegisteredError
+from pyvmmonitor_core.plugins import (InstanceAlreadyRegisteredError,
+                                      NotRegisteredError, PluginManager)
 
 
 class EPFoo(object):
@@ -70,6 +70,11 @@ def test_plugins():
     assert len(list(pm.iter_existing_instances(EPFoo))) == 2
     assert set(pm.iter_existing_instances(EPFoo)) == set(
         [pm.get_instance(EPFoo, context='context2'), pm.get_instance(EPFoo)])
+
+    # Request using a string.
+    assert len(list(pm.iter_existing_instances('EPFoo'))) == 2
+    assert set(pm.iter_existing_instances('EPFoo')) == set(
+        [pm.get_instance(EPFoo, context='context2'), pm.get_instance('EPFoo')])
 
 
 def test_plugins_exit():
