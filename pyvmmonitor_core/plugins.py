@@ -248,7 +248,7 @@ def inject(**inject_kwargs):
     def decorator(func):
 
         @functools.wraps(func)
-        def final_dec(**kwargs):
+        def final_dec(*args, **kwargs):
             pm = kwargs.get('pm')
             if pm is None:
                 raise AssertionError(
@@ -260,7 +260,7 @@ def inject(**inject_kwargs):
                         kwargs[key] = pm.get_implementations(val[0])
                     else:
                         kwargs[key] = pm.get_instance(val)
-            return func(**kwargs)
+            return func(*args, **kwargs)
 
         return final_dec
 
