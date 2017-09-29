@@ -107,7 +107,7 @@ def _impl_details(cls_or_obj, interface_class):
         if not found:
             impl_details = _cache[key] = ImplDetails(
                 False, '%s.%s not available.\n\nExpected: %s\nto implement: %s\nFrom: %s' %
-                (cls.__name__, method_name, cls, method_name, cls))
+                (cls.__name__, method_name, cls, method_name, interface_class))
 
             return impl_details
         else:
