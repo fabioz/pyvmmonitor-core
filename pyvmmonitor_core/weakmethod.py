@@ -10,11 +10,14 @@ while allowing GC to work.
 Based on recipe from Python Cookbook, page 191. Differs by only working on
 boundmethods and returning a true boundmethod in the __call__() function.
 '''
+import weakref
+
+from pyvmmonitor_core import compat
+
 try:
     import new
 except ImportError:
     import types as new
-import weakref
 
 try:
     ReferenceError = weakref.ReferenceError
@@ -36,21 +39,38 @@ class WeakMethod(object):
         '__weakref__'  # We need this to be able to add weak references.
     ]
 
-    def __init__(self, method):
-        try:
-            if method.im_self is not None:
-                # bound method
-                self._obj = weakref.ref(method.im_self)
-            else:
-                # unbound method
+    if compat.PY2:
+        def __init__(self, method):
+            try:
+                if method.im_self is not None:
+                    # bound method
+                    self._obj = weakref.ref(method.im_self)
+                else:
+                    # unbound method
+                    self._obj = None
+                self._func = method.im_func
+                self._class = method.im_class
+            except AttributeError:
+                # For functions leave strong references.
                 self._obj = None
-            self._func = method.im_func
-            self._class = method.im_class
-        except AttributeError:
-            # For functions leave strong references.
-            self._obj = None
-            self._func = method
-            self._class = None
+                self._func = method
+                self._class = None
+    else:  # Py3 onwards
+        def __init__(self, method):
+            try:
+                if method.__self__ is not None:
+                    # bound method
+                    self._obj = weakref.ref(method.__self__)
+                else:
+                    # unbound method
+                    self._obj = None
+                self._func = method.__func__
+                self._class = method.__class__
+            except AttributeError:
+                # For functions leave strong references.
+                self._obj = None
+                self._func = method
+                self._class = None
 
     def __call__(self):
         '''
@@ -63,8 +83,11 @@ class WeakMethod(object):
         if self.is_dead():
             return None
         if self._obj is not None:
-            # we have an instance: return a bound method
-            return new.instancemethod(self._func, self._obj(), self._class)
+            if compat.PY2:
+                # we have an instance: return a bound method
+                return new.instancemethod(self._func, self._obj(), self._class)
+            else:
+                return new.MethodType(self._func, self._obj())
         else:
             # we don't have an instance: return just the function
             return self._func
