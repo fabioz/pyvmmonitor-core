@@ -172,7 +172,10 @@ class _DefaultCommandsManager(object):
 
     @implements(ICommandsManager.get_command_info)
     def get_command_info(self, command_id):
-        return self._command_id_to_info[command_id]
+        try:
+            return self._command_id_to_info[command_id]
+        except KeyError:
+            raise CommandUndefinedEror('Command with id: %s is not defined.' % (command_id,))
 
     @implements(ICommandsManager.set_command_handler)
     def set_command_handler(self, command_id, command_handler,
