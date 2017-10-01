@@ -92,6 +92,9 @@ class PluginManager(object):
 
     def get_implementations(self, ep):
         assert not self.exited
+        if ep.__class__ in string_types:
+            ep = self._name_to_ep[ep]
+
         impls = self._ep_to_impls.get(ep, [])
         ret = []
         for impl, kwargs in impls:
