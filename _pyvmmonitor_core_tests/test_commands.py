@@ -68,3 +68,5 @@ def test_commands():
 
     with pytest.raises(RuntimeError):
         commands_manager.register_command('copy', 'Foo')
+
+    assert commands_manager.list_command_ids() == ['copy']

@@ -92,6 +92,11 @@ class ICommandsManager(object):
         Deactivates a previously activated scope.
         '''
 
+    def list_command_ids(self):
+        '''
+        Returns the available command ids.
+        '''
+
 
 def create_default_commands_manager():
     '''
@@ -128,6 +133,11 @@ class _DefaultCommandsManager(object):
         self._command_id_to_info = {}
         self._activated_scopes = [ICommandsManager.DEFAULT_SCOPE]
         self._valid_scopes = {ICommandsManager.DEFAULT_SCOPE}
+
+    @implements(ICommandsManager.list_command_ids)
+    def list_command_ids(self):
+        from pyvmmonitor_core import compat
+        return compat.keys(self._command_id_to_info)
 
     @implements(ICommandsManager.register_scope)
     def register_scope(self, scope):
