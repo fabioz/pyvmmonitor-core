@@ -3,10 +3,9 @@
 # Copyright: Brainwy Software
 
 # Numeric Constants
-from math import pow, atan2, cos, sin, sqrt
+from math import atan2, cos, pow, sin, sqrt
 
 from pyvmmonitor_core import compat
-
 
 MAX_INT32 = int(pow(2, 31) - 1)
 MIN_INT32 = -(MAX_INT32 + 1)
@@ -201,3 +200,13 @@ class Bounds(object):
 
     def make_immutable(self):
         self._immutable = True
+
+
+def radians_to_0_360_degrees(angle):
+    import math
+    degrees = math.degrees(angle)
+    while degrees < 0:
+        degrees += 360
+    while degrees > 360:
+        degrees -= 360
+    return degrees
