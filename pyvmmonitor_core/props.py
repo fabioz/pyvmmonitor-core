@@ -62,7 +62,7 @@ class PropsCustomProperty(object):
     def __init__(self, default):
         self.default = default
 
-    def convert(self, val):
+    def convert(self, obj, val):
         '''
         Subclasses may override to convert the value which is being set.
         '''
@@ -186,3 +186,22 @@ class PropsObject(object):
         for prop in self.get_all_props_names():
             ret[prop] = getattr(self, prop)
         return ret
+
+    @classmethod
+    def delegate_to_props(cls, *props):
+        frame = sys._getframe().f_back
+        namespace = frame.f_locals
+
+        for prop in props:
+            namespace[prop] = _make_delegator_property(prop)
+
+
+def _make_delegator_property(key):
+
+    def get_val(self):
+        return getattr(self._props, key)
+
+    def set_val(self, val):
+        return setattr(self._props, key, val)
+
+    return property(get_val, set_val)

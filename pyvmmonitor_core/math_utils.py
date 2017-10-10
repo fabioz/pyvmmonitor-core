@@ -210,3 +210,7 @@ def radians_to_0_360_degrees(angle):
     while degrees > 360:
         degrees -= 360
     return degrees
+
+
+def equilateral_triangle_height(triangle_side):
+    return sqrt(3) / 2 * triangle_side

@@ -1,4 +1,5 @@
 import logging.handlers
+from contextlib import contextmanager
 
 # Same thing as logging.getLogger, but with a pep-8 alias.
 #
@@ -62,3 +63,13 @@ def config_rotating_file_handler_from_env_var(env_var, log_filename, logger_name
 
     if msg:
         get_logger(__name__).warn(msg)
+
+
+@contextmanager
+def logger_level(logger, level):
+    initial = logger.level
+    logger.level = level
+    try:
+        yield
+    finally:
+        logger.level = initial
