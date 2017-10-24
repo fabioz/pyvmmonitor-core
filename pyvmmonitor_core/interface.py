@@ -56,13 +56,13 @@ _PY2 = sys.version_info[0] == 2
 
 
 @memoize
-def _get_methods(interface_class):
+def _get_methods_and_properties(interface_class):
     obj_methods = _obj_methods
     ret = []
     for method_name in dir(interface_class):
         if method_name not in obj_methods:
             m = getattr(interface_class, method_name)
-            if inspect.isfunction(m) or inspect.ismethod(m):
+            if inspect.isfunction(m) or inspect.ismethod(m) or m.__class__ == property:
                 ret.append(method_name)
     return frozenset(ret)
 
@@ -70,13 +70,14 @@ def _get_methods(interface_class):
 ImplDetails = namedtuple('ImplDetails', 'is_impl msg'.split())
 _cache = {}
 
-
 if _PY2:
     from new import classobj  # @UnresolvedImport
 
     def _is_class(obj):
         return isinstance(obj, (type, classobj))
+
 else:
+
     def _is_class(obj):
         return isinstance(obj, type)
 
@@ -92,25 +93,49 @@ def _impl_details(cls_or_obj, interface_class):
     if ret is not None:
         return ret
 
-    cls_methods = _get_methods(cls)
-    for method_name in _get_methods(interface_class):
-        if method_name not in cls_methods:
+    cls_methods_and_properties = _get_methods_and_properties(cls)
+    for method_or_prop_name in _get_methods_and_properties(interface_class):
+        if method_or_prop_name not in cls_methods_and_properties:
             found = False
         else:
-            method_in_cls = getattr(cls, method_name)
-            method_in_interface = getattr(interface_class, method_name)
+            method_in_cls = getattr(cls, method_or_prop_name)
+            method_in_interface = getattr(interface_class, method_or_prop_name)
             if method_in_cls == method_in_interface:
-                found = False  # Interface subclass but doesn't override method_name.
+                found = False  # Interface subclass but doesn't override method_or_prop_name.
             else:
                 found = True
 
         if not found:
             impl_details = _cache[key] = ImplDetails(
                 False, '%s.%s not available.\n\nExpected: %s\nto implement: %s\nFrom: %s' %
-                (cls.__name__, method_name, cls, method_name, interface_class))
+                (cls.__name__, method_or_prop_name, cls, method_or_prop_name, interface_class))
 
             return impl_details
         else:
+            if method_in_interface.__class__ == property:
+                if method_in_cls.__class__ != property:
+                    msg = ('Expected %s to be a property in %s' % (
+                        cls.__name__, method_or_prop_name))
+                    impl_details = _cache[key] = ImplDetails(False, msg)
+                    return impl_details
+
+                if method_in_interface.fdel is not None:
+                    if method_in_cls.fdel is None:
+                        msg = ('Expected fdel in %s.%s property.' % (
+                            cls.__name__, method_or_prop_name))
+                        impl_details = _cache[key] = ImplDetails(False, msg)
+                        return impl_details
+
+                if method_in_interface.fset is not None:
+                    if method_in_cls.fset is None:
+                        msg = ('Expected fset in %s.%s property.' % (
+                            cls.__name__, method_or_prop_name))
+                        impl_details = _cache[key] = ImplDetails(False, msg)
+                        return impl_details
+
+                # No need to check fget (should always be there).
+                continue
+
             # Let's see if parameters match
             cls_args, cls_varargs, cls_varkw, cls_defaults = inspect.getargspec(method_in_cls)
 
@@ -136,8 +161,8 @@ def _impl_details(cls_or_obj, interface_class):
 
                 msg = ("\nMethod params in %s.%s:\n"
                        "  %s\ndon't match params in %s.%s\n  %s")
-                msg = msg % (cls.__name__, method_name, class_signature,
-                             interface_class.__name__, method_name, interface_signature)
+                msg = msg % (cls.__name__, method_or_prop_name, class_signature,
+                             interface_class.__name__, method_or_prop_name, interface_signature)
 
                 impl_details = _cache[key] = ImplDetails(False, msg)
 
@@ -179,10 +204,12 @@ def check_implements(*interface_classes):
         pass
 
     '''
+
     def func(cls):
         for interface_class in interface_classes:
             details = _impl_details(cls, interface_class)
             if details.msg:
                 raise BadImplementationError(details.msg)
         return cls
+
     return func
