@@ -46,7 +46,6 @@ if sys.version_info[0] >= 3:
 else:
     string_types = (unicode, str)
 
-
 load_class = load_token  # Alias for backward compatibility
 
 
@@ -163,7 +162,9 @@ class PluginManager(object):
 
     def has_instance(self, ep, context=None):
         if ep.__class__ in string_types:
-            ep = self._name_to_ep[ep]
+            ep = self._name_to_ep.get(ep)
+            if ep is None:
+                return False
 
         try:
             self.get_instance(ep, context)
