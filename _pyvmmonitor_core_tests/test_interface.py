@@ -61,6 +61,32 @@ def test_interfaces_match_params():
                 pass
 
 
+def test_interfaces_full_argspec_required():
+    import sys
+    from _pyvmmonitor_core_tests import _py3_only
+    if sys.version_info[0] <= 2:
+        return
+
+    from pyvmmonitor_core import interface
+    from pyvmmonitor_core.interface import BadImplementationError
+    ISomething = _py3_only.ISomething
+    SomethingImplWrong = _py3_only.SomethingImplWrong
+    SomethingImpl = _py3_only.SomethingImpl
+
+    with pytest.raises(BadImplementationError):
+
+        @interface.check_implements(ISomething)
+        class SomethingImpl(object):
+
+            def m1(self, a):
+                pass
+
+    with pytest.raises(BadImplementationError):
+        interface.assert_implements(SomethingImplWrong, ISomething)
+
+    interface.assert_implements(SomethingImpl, ISomething)
+
+
 def test_interface_properties():
 
     from pyvmmonitor_core.interface import BadImplementationError

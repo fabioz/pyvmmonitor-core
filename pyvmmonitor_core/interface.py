@@ -137,7 +137,13 @@ def _impl_details(cls_or_obj, interface_class):
                 continue
 
             # Let's see if parameters match
-            cls_args, cls_varargs, cls_varkw, cls_defaults = inspect.getargspec(method_in_cls)
+            try:
+                cls_args, cls_varargs, cls_varkw, cls_defaults = inspect.getargspec(method_in_cls)
+                cls_kwonlyargs = None
+                cls_kwonlydefaults = None
+            except ValueError:
+                cls_args, cls_varargs, cls_varkw, cls_defaults, cls_kwonlyargs, \
+                    cls_kwonlydefaults, _ = inspect.getfullargspec(method_in_cls)
 
             if cls_varargs is not None and cls_varkw is not None:
                 if not cls_args or cls_args == ['self'] or cls_args == ['cls']:
@@ -145,19 +151,31 @@ def _impl_details(cls_or_obj, interface_class):
                     # always match
                     continue
 
-            interf_args, interf_varargs, interf_varkw, interf_defaults = inspect.getargspec(
-                method_in_interface)
+            try:
+                interf_args, interf_varargs, interf_varkw, interf_defaults = inspect.getargspec(
+                    method_in_interface)
+                interf_kwonlyargs = None
+                interf_kwonlydefaults = None
+            except ValueError:
+                interf_args, interf_varargs, interf_varkw, interf_defaults, interf_kwonlyargs, \
+                    interf_kwonlydefaults, _interf_annotations = inspect.getfullargspec(
+                        method_in_interface)
 
             # Now, let's see if parameters actually match the interface parameters.
             if interf_varargs is not None and cls_varargs is None or \
                     interf_varkw is not None and cls_varkw is None or \
                     interf_args != cls_args or \
-                    interf_defaults != cls_defaults:
+                    interf_defaults != cls_defaults or \
+                    interf_kwonlyargs != cls_kwonlyargs or \
+                    interf_kwonlydefaults != cls_kwonlydefaults:
+
                 interface_signature = inspect.formatargspec(
-                    interf_args, interf_varargs, interf_varkw, interf_defaults)
+                    interf_args, interf_varargs, interf_varkw, interf_defaults,
+                    interf_kwonlyargs, interf_kwonlydefaults)
 
                 class_signature = inspect.formatargspec(
-                    cls_args, cls_varargs, cls_varkw, cls_defaults)
+                    cls_args, cls_varargs, cls_varkw, cls_defaults, cls_kwonlyargs,
+                    cls_kwonlydefaults)
 
                 msg = ("\nMethod params in %s.%s:\n"
                        "  %s\ndon't match params in %s.%s\n  %s")
