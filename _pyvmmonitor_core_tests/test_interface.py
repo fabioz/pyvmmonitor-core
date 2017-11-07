@@ -63,10 +63,10 @@ def test_interfaces_match_params():
 
 def test_interfaces_full_argspec_required():
     import sys
-    from _pyvmmonitor_core_tests import _py3_only
     if sys.version_info[0] <= 2:
         return
 
+    from _pyvmmonitor_core_tests import _py3_only
     from pyvmmonitor_core import interface
     from pyvmmonitor_core.interface import BadImplementationError
     ISomething = _py3_only.ISomething

@@ -169,13 +169,20 @@ def _impl_details(cls_or_obj, interface_class):
                     interf_kwonlyargs != cls_kwonlyargs or \
                     interf_kwonlydefaults != cls_kwonlydefaults:
 
-                interface_signature = inspect.formatargspec(
-                    interf_args, interf_varargs, interf_varkw, interf_defaults,
-                    interf_kwonlyargs, interf_kwonlydefaults)
+                if _PY2:
+                    interface_signature = inspect.formatargspec(
+                        interf_args, interf_varargs, interf_varkw, interf_defaults)
 
-                class_signature = inspect.formatargspec(
-                    cls_args, cls_varargs, cls_varkw, cls_defaults, cls_kwonlyargs,
-                    cls_kwonlydefaults)
+                    class_signature = inspect.formatargspec(
+                        cls_args, cls_varargs, cls_varkw, cls_defaults)
+                else:
+                    interface_signature = inspect.formatargspec(
+                        interf_args, interf_varargs, interf_varkw, interf_defaults,
+                        interf_kwonlyargs, interf_kwonlydefaults)
+
+                    class_signature = inspect.formatargspec(
+                        cls_args, cls_varargs, cls_varkw, cls_defaults, cls_kwonlyargs,
+                        cls_kwonlydefaults)
 
                 msg = ("\nMethod params in %s.%s:\n"
                        "  %s\ndon't match params in %s.%s\n  %s")
