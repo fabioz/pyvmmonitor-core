@@ -1,8 +1,8 @@
 # License: LGPL
 #
 # Copyright: Brainwy Software
-from functools import wraps
 import sys
+from functools import wraps
 
 
 def overrides(method_overridden):
@@ -11,6 +11,7 @@ def overrides(method_overridden):
 
     It also checks that the method name is the same.
     '''
+
     def wrapper(func):
         if func.__name__ != method_overridden.__name__:
             msg = "Wrong @overrides: %r expected, but overwriting %r."
@@ -51,6 +52,7 @@ def implements(method_implemented):
 def is_frozen():
     return getattr(sys, 'frozen', False)
 
+
 _is_development = not is_frozen()
 
 
@@ -81,6 +83,7 @@ def abstract(func):
 if __name__ == '__main__':
 
     class A(object):
+
         def m1(self):
             pass
 
