@@ -217,6 +217,8 @@ class PluginManager(object):
             ret.pm = get_weakref(self)
             return ret
 
+    __getitem__ = get_instance
+
     def exit(self):
         try:
             self.on_about_to_exit()

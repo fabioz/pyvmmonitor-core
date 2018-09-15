@@ -51,6 +51,8 @@ def test_plugins():
 
     foo = pm.get_instance(EPFoo)
     assert pm.get_instance(EPFoo) is foo
+    assert pm[EPFoo] is foo
+    assert pm['EPFoo'] is foo
     # It's only registered in a way where the instance is kept
     assert not pm.get_implementations(EPFoo)
 
@@ -86,6 +88,7 @@ def test_plugins_exit():
 
     def on_exit(s):
         exited.append(s)
+
     f1.exited.register(on_exit)
     f2.exited.register(on_exit)
     pm.exit()
