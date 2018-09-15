@@ -44,6 +44,7 @@ import inspect
 import sys
 from collections import namedtuple
 
+from pyvmmonitor_core import compat
 from pyvmmonitor_core.memoization import memoize
 
 
@@ -137,11 +138,11 @@ def _impl_details(cls_or_obj, interface_class):
                 continue
 
             # Let's see if parameters match
-            try:
+            if compat.PY2:
                 cls_args, cls_varargs, cls_varkw, cls_defaults = inspect.getargspec(method_in_cls)
                 cls_kwonlyargs = None
                 cls_kwonlydefaults = None
-            except ValueError:
+            else:
                 cls_args, cls_varargs, cls_varkw, cls_defaults, cls_kwonlyargs, \
                     cls_kwonlydefaults, _ = inspect.getfullargspec(method_in_cls)
 
@@ -151,12 +152,12 @@ def _impl_details(cls_or_obj, interface_class):
                     # always match
                     continue
 
-            try:
+            if compat.PY2:
                 interf_args, interf_varargs, interf_varkw, interf_defaults = inspect.getargspec(
                     method_in_interface)
                 interf_kwonlyargs = None
                 interf_kwonlydefaults = None
-            except ValueError:
+            else:
                 interf_args, interf_varargs, interf_varkw, interf_defaults, interf_kwonlyargs, \
                     interf_kwonlydefaults, _interf_annotations = inspect.getfullargspec(
                         method_in_interface)
