@@ -35,10 +35,11 @@ def implements(method_implemented):
     '''
 
     def wrapper(func):
-        if func.__name__ != method_implemented.__name__:
-            msg = "Wrong @implements: %r expected, but implementing %r."
-            msg = msg % (func.__name__, method_implemented.__name__)
-            raise AssertionError(msg)
+        if hasattr(method_implemented, '__name__'):
+            if func.__name__ != method_implemented.__name__:
+                msg = "Wrong @implements: %r expected, but implementing %r."
+                msg = msg % (func.__name__, method_implemented.__name__)
+                raise AssertionError(msg)
 
         if func.__doc__ is None:
             # inherit docs if it's not there already.

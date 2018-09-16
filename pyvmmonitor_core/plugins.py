@@ -61,6 +61,12 @@ class InstanceAlreadyRegisteredError(RuntimeError):
     pass
 
 
+class IPluginsExit(object):
+
+    def plugins_exit(self):
+        pass
+
+
 class PluginManager(object):
 
     '''
