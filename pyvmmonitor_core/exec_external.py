@@ -21,7 +21,6 @@ try:
 except Exception:
     import io as StringIO
 
-
 PY2 = sys.version_info[0] < 3
 
 logger = get_logger(__name__)
@@ -37,28 +36,31 @@ def kill_process(pid, kill_children=True):
         return
 
     if kill_children:
-        if hasattr(process, 'children'):
-            for child in process.children(recursive=True):
-                try:
-                    child.kill()
-                except psutil.NoSuchProcess:
-                    logger.info(
-                        'Child process with pid %s not available to kill '
-                        '(probably died in the meanwhile).', (child.pid,))
-        else:
-            for child in process.get_children(recursive=True):
-                try:
-                    child.kill()
-                except psutil.NoSuchProcess:
-                    logger.info(
-                        'Child process with pid %s not available to kill '
-                        '(probably died in the meanwhile).', (child.pid,))
+        for child in _get_children(process):
+            try:
+                child.kill()
+            except psutil.NoSuchProcess:
+                logger.info(
+                    'Child process with pid %s not available to kill '
+                    '(probably died in the meanwhile).', (child.pid,))
     try:
         process.kill()
     except psutil.NoSuchProcess:
         logger.info(
             'Process with pid %s not available to kill (probably died in the meanwhile).',
             (pid,))
+
+
+def _get_children(process):
+    try:
+        if hasattr(process, 'children'):
+            return process.children(recursive=True)
+        return process.get_children(recursive=True)
+    except psutil.NoSuchProcess:
+        logger.info(
+            'Process with pid %s not available '
+            '(probably died in the meanwhile).', (process.pid,))
+        return []
 
 
 class ExecExternal(object):
