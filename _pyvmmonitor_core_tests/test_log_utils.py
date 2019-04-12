@@ -11,7 +11,7 @@ def test_log_utils(tmpdir):
     log_utils.config_rotating_file_handler_from_env_var(
         'TEST_LOG_ENV_VAR', log_filename, logger_name='test_log_utils')
 
-    logger.warn('warn')
+    logger.warning('warn')
     logger.info('info')
     logger.debug('debug')
     try:
