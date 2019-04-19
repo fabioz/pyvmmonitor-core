@@ -26,6 +26,9 @@ def test_commands_remove_handler():
     def dummy_copy():
         copied.append(1)
 
+    def dummy_foo():
+        print
+
     commands_manager = create_default_commands_manager()
     commands_manager.register_command('copy', 'Copy')
     commands_manager.activate('copy')
@@ -40,9 +43,15 @@ def test_commands_remove_handler():
     commands_manager.activate('copy')
     assert copied == [1]
 
-    commands_manager.set_command_handler('copy', None, scope='copy_scope')
+    # Don't remove because it's not the current one.
+    commands_manager.remove_command_handler('copy', dummy_foo, scope='copy_scope')
     commands_manager.activate('copy')
-    assert copied == [1]
+    assert copied == [1, 1]
+
+    # Now, actually remove it.
+    commands_manager.remove_command_handler('copy', dummy_copy, scope='copy_scope')
+    commands_manager.activate('copy')
+    assert copied == [1, 1]
 
 
 def test_commands():

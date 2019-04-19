@@ -63,7 +63,15 @@ class ICommandsManager(object):
         The command_handler must be a callable -- it may accept arguments (which then will need to
         be passed in #activate).
 
-        To remove a command handler, pass `command_handler` as None.
+        It's possible to pass None to set no command handler in the context (also see
+        remove_command_handler to remove a registered command handler -- in case it's registered
+        and then removed).
+        '''
+
+    def remove_command_handler(self, command_id, command_handler, scope=DEFAULT_SCOPE):
+        '''
+        Removes a registered handler if it's the current handler at a given scope (does nothing
+        if it's not the current handler).
         '''
 
     def activate(self, command_id, **kwargs):
@@ -203,6 +211,22 @@ class _DefaultCommandsManager(object):
             prev_command_handler = scopes.get(scope, _default_noop_handler)
             scopes[scope] = command_handler
             return prev_command_handler
+
+    @implements(ICommandsManager.remove_command_handler)
+    def remove_command_handler(self, command_id, command_handler,
+                               scope=ICommandsManager.DEFAULT_SCOPE):
+        if scope not in self._valid_scopes:
+            raise ValueError('The passed scope (%s) was not registered.' % (scope,))
+
+        try:
+            scopes = self._command_id_to_scopes[command_id]
+        except KeyError:
+            raise CommandUndefinedEror('Command with id: %s is not defined.' % (command_id,))
+        else:
+            prev_command_handler = scopes.get(scope, _default_noop_handler)
+            if prev_command_handler is command_handler:
+                scopes[scope] = None
+            return True
 
     @implements(ICommandsManager.activate)
     def activate(self, command_id, **kwargs):
