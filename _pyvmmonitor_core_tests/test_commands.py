@@ -40,6 +40,7 @@ def test_commands_remove_handler():
     assert copied == []
 
     commands_manager.activate_scope('copy_scope')
+    assert commands_manager.list_active_scopes() == ['default_scope', 'copy_scope']
     commands_manager.activate('copy')
     assert copied == [1]
 
@@ -84,9 +85,12 @@ def test_commands():
     assert copied == [1, 1]
 
     commands_manager.activate_scope('dock_focused')
+    assert commands_manager.list_active_scopes() == ['default_scope', 'dock_focused']
     commands_manager.activate('copy')
     assert copied == [1, 1, 2]
     commands_manager.deactivate_scope('dock_focused')
+
+    assert commands_manager.list_active_scopes() == ['default_scope']
 
     commands_manager.activate('copy')
     assert copied == [1, 1, 2, 1]

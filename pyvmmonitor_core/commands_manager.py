@@ -107,6 +107,13 @@ class ICommandsManager(object):
         Returns the available command ids.
         '''
 
+    def list_active_scopes(self):
+        '''
+        Returns the current scope activation list.
+
+        :rtype: list(str)
+        '''
+
 
 def create_default_commands_manager():
     '''
@@ -148,6 +155,10 @@ class _DefaultCommandsManager(object):
     def list_command_ids(self):
         from pyvmmonitor_core import compat
         return compat.keys(self._command_id_to_info)
+
+    @implements(ICommandsManager.list_active_scopes)
+    def list_active_scopes(self):
+        return self._activated_scopes[:]
 
     @implements(ICommandsManager.register_scope)
     def register_scope(self, scope):
