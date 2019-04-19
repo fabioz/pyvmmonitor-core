@@ -1,4 +1,5 @@
 
+
 def test_commands_params():
     from pyvmmonitor_core.commands_manager import create_default_commands_manager
 
@@ -15,6 +16,33 @@ def test_commands_params():
     commands_manager.set_command_handler('copy', dummy_copy)
     commands_manager.activate('copy', param=2)
     assert copied == [2]
+
+
+def test_commands_remove_handler():
+    from pyvmmonitor_core.commands_manager import create_default_commands_manager
+
+    copied = []
+
+    def dummy_copy():
+        copied.append(1)
+
+    commands_manager = create_default_commands_manager()
+    commands_manager.register_command('copy', 'Copy')
+    commands_manager.activate('copy')
+    assert copied == []
+
+    commands_manager.register_scope('copy_scope')
+    commands_manager.set_command_handler('copy', dummy_copy, scope='copy_scope')
+    commands_manager.activate('copy')
+    assert copied == []
+
+    commands_manager.activate_scope('copy_scope')
+    commands_manager.activate('copy')
+    assert copied == [1]
+
+    commands_manager.set_command_handler('copy', None, scope='copy_scope')
+    commands_manager.activate('copy')
+    assert copied == [1]
 
 
 def test_commands():

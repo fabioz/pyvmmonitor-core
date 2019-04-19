@@ -62,6 +62,8 @@ class ICommandsManager(object):
 
         The command_handler must be a callable -- it may accept arguments (which then will need to
         be passed in #activate).
+
+        To remove a command handler, pass `command_handler` as None.
         '''
 
     def activate(self, command_id, **kwargs):
@@ -104,8 +106,8 @@ def create_default_commands_manager():
     '''
     return _DefaultCommandsManager()
 
-
 # --- Private API from now on ---
+
 
 def _default_noop_handler(**kwargs):
     pass
