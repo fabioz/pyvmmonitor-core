@@ -32,6 +32,7 @@ try:
         assert greenlet.getcurrent().parent is None, 'Did not expect to be in a coroutine'
 
 except ImportError:
+
     # Add no-op version.
     def _assert_not_in_coroutine():
         pass
@@ -91,6 +92,26 @@ class PropsCustomProperty(object):
         return property(get_val, set_val)
 
 
+class _ModifiedCallbackKeeper(object):
+
+    def __init__(self):
+        self._new_val_old_vals = {}
+
+    def __call__(self, obj, attrs):
+        for key, (new_val, old_val) in compat.iteritems(attrs):
+            prev_notification = self._new_val_old_vals.get(key)
+            if prev_notification is not None:
+                old_val = prev_notification[1]
+
+            if new_val == old_val:
+                self._new_val_old_vals.pop(key)
+            else:
+                self._new_val_old_vals[key] = (new_val, old_val)
+
+    def notify(self, obj, original_callback):
+        original_callback(obj, self._new_val_old_vals)
+
+
 class PropsObject(object):
     '''
     To use:
@@ -111,7 +132,7 @@ class PropsObject(object):
     point.register_modified(on_modified)
     '''
 
-    __slots__ = ['_props', '_on_modified_callback', '__weakref__']
+    __slots__ = ['_props', '_on_modified_callback', '__weakref__', '_original_on_modified_callback']
 
     @classmethod
     def declare_props(cls, **kwargs):
@@ -140,15 +161,15 @@ class PropsObject(object):
 
     def __init__(self, **kwargs):
         self._props = {}
-        self._on_modified_callback = Callback()
+        self._original_on_modified_callback = self._on_modified_callback = Callback()
         for key, val in compat.iteritems(kwargs):
             setattr(self, key, val)
 
     def register_modified(self, on_modified):
-        self._on_modified_callback.register(on_modified)
+        self._original_on_modified_callback.register(on_modified)
 
     def unregister_modified(self, on_modified):
-        self._on_modified_callback.unregister(on_modified)
+        self._original_on_modified_callback.unregister(on_modified)
 
     def create_memento(self):
         '''
@@ -194,6 +215,18 @@ class PropsObject(object):
 
         for prop in props:
             namespace[prop] = _make_delegator_property(prop)
+
+
+@contextmanager
+def delayed_notifications(props_obj):
+    original = props_obj._on_modified_callback
+    modified_callback_keeper = _ModifiedCallbackKeeper()
+    props_obj._on_modified_callback = modified_callback_keeper
+    try:
+        yield
+    finally:
+        props_obj._on_modified_callback = original
+        modified_callback_keeper.notify(props_obj, original)
 
 
 def _make_delegator_property(key):

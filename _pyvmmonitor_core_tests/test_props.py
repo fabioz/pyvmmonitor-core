@@ -64,3 +64,27 @@ def test_props_as_dict():
 
     assert MyProps2().get_all_props_names() == frozenset(('a', 'b', 'c'))
     assert props.__all_props_cache_info__['hit'] == 2
+
+
+def test_props_single_notification():
+
+    from pyvmmonitor_core.props import delayed_notifications
+
+    class MyProps(PropsObject):
+        PropsObject.declare_props(a=10, b=20, c=30)
+
+    props = MyProps()
+    notifications = []
+
+    def on_modified(obj, attrs):
+        notifications.append((obj, attrs))
+
+    props.register_modified(on_modified)
+    with delayed_notifications(props):
+        props.a = 44
+        props.b = 55
+        props.a = 22
+        props.c = 55
+        props.c = 30
+
+    assert notifications == [(props, {'a': (22, 10), 'b': (55, 20)})]
