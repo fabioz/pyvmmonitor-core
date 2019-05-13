@@ -31,7 +31,8 @@ from pyvmmonitor_core import implements, interface
 
 class ICommandsManager(object):
 
-    DEFAULT_SCOPE = 'default_scope'
+    DEFAULT_SCOPE = None
+    CURRENT_SCOPE = []  # Sentinel: any mutable (check with 'is')
 
     def register_command(self, command_id, command_name, icon=None, status_tip=None):
         '''
@@ -74,7 +75,7 @@ class ICommandsManager(object):
         if it's not the current handler).
         '''
 
-    def activate(self, command_id, **kwargs):
+    def activate(self, command_id, __scope__=CURRENT_SCOPE, **kwargs):
         '''
         Activates a given command.
 
@@ -240,14 +241,20 @@ class _DefaultCommandsManager(object):
             return True
 
     @implements(ICommandsManager.activate)
-    def activate(self, command_id, **kwargs):
+    def activate(self, command_id, __scope__=ICommandsManager.CURRENT_SCOPE, **kwargs):
         try:
             scopes = self._command_id_to_scopes[command_id]
         except KeyError:
             raise CommandUndefinedEror('Command with id: %s is not defined.' % (command_id,))
         else:
-            for active_scope in reversed(self._activated_scopes):
-                handler = scopes.get(active_scope)
+            if __scope__ is ICommandsManager.CURRENT_SCOPE:
+                for active_scope in reversed(self._activated_scopes):
+                    handler = scopes.get(active_scope)
+                    if handler is not None:
+                        handler(**kwargs)
+                        break
+            else:
+                # Use the passed scope.
+                handler = scopes.get(__scope__)
                 if handler is not None:
                     handler(**kwargs)
-                    break

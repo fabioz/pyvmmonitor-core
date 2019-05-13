@@ -1,3 +1,4 @@
+from pyvmmonitor_core.commands_manager import ICommandsManager
 
 
 def test_commands_params():
@@ -16,6 +17,39 @@ def test_commands_params():
     commands_manager.set_command_handler('copy', dummy_copy)
     commands_manager.activate('copy', param=2)
     assert copied == [2]
+
+
+def test_scope_activate():
+    from pyvmmonitor_core.commands_manager import create_default_commands_manager
+    from pyvmmonitor_core.commands_manager import ICommandsManager
+
+    copied = []
+
+    def dummy_bar():
+        copied.append('bar')
+
+    def dummy_foo():
+        copied.append('foo')
+
+    commands_manager = create_default_commands_manager()
+    commands_manager.register_command('copy', 'Copy')
+    commands_manager.register_scope('scope1')
+    commands_manager.set_command_handler('copy', dummy_bar)
+    commands_manager.set_command_handler('copy', dummy_foo, scope='scope1')
+
+    commands_manager.activate('copy')
+    assert copied == ['bar']
+
+    commands_manager.activate('copy', 'scope1')
+    assert copied == ['bar', 'foo']
+
+    commands_manager.activate_scope('scope1')
+
+    commands_manager.activate('copy')
+    assert copied == ['bar', 'foo', 'foo']
+
+    commands_manager.activate('copy', ICommandsManager.DEFAULT_SCOPE)
+    assert copied == ['bar', 'foo', 'foo', 'bar']
 
 
 def test_commands_remove_handler():
@@ -40,7 +74,7 @@ def test_commands_remove_handler():
     assert copied == []
 
     commands_manager.activate_scope('copy_scope')
-    assert commands_manager.list_active_scopes() == ['default_scope', 'copy_scope']
+    assert commands_manager.list_active_scopes() == [ICommandsManager.DEFAULT_SCOPE, 'copy_scope']
     commands_manager.activate('copy')
     assert copied == [1]
 
@@ -85,12 +119,12 @@ def test_commands():
     assert copied == [1, 1]
 
     commands_manager.activate_scope('dock_focused')
-    assert commands_manager.list_active_scopes() == ['default_scope', 'dock_focused']
+    assert commands_manager.list_active_scopes() == [ICommandsManager.DEFAULT_SCOPE, 'dock_focused']
     commands_manager.activate('copy')
     assert copied == [1, 1, 2]
     commands_manager.deactivate_scope('dock_focused')
 
-    assert commands_manager.list_active_scopes() == ['default_scope']
+    assert commands_manager.list_active_scopes() == [ICommandsManager.DEFAULT_SCOPE]
 
     commands_manager.activate('copy')
     assert copied == [1, 1, 2, 1]
