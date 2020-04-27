@@ -99,7 +99,11 @@ class ExecExternal(object):
 
     finished = property(lambda self: self._finished_event.is_set())
 
-    def call(self):
+    @property
+    def stdin(self):
+        return self._process.stdin
+
+    def call(self, **popen_kwargs):
         try:
             startupinfo = None
             if sys.platform == 'win32':
@@ -119,7 +123,7 @@ class ExecExternal(object):
             else:
                 args = self.args
 
-            process = self._process = subprocess.Popen(
+            kwargs = dict(
                 args=args,
                 bufsize=1,
                 cwd=self.cwd,
@@ -129,6 +133,8 @@ class ExecExternal(object):
                 stderr=subprocess.STDOUT,
                 startupinfo=startupinfo,
             )
+            kwargs.update(popen_kwargs)
+            process = self._process = subprocess.Popen(**kwargs)
             self.pid = process.pid
 
             try:
