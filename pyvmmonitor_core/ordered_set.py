@@ -6,7 +6,10 @@ License: MIT
 Copyright: Brainwy Software
 '''
 
-import collections.abc
+try:
+    from collections.abc import MutableSet
+except ImportError:
+    from collections import MutableSet
 from weakref import ref
 
 
@@ -14,7 +17,7 @@ class _Node(object):
     __slots__ = ['prev', 'next', 'el', '__weakref__']
 
 
-class OrderedSet(collections.abc.MutableSet):
+class OrderedSet(MutableSet):
     '''
     Some notes:
 
