@@ -59,6 +59,37 @@ def calculate_distance(p0, p1):
     return sqrt((p1[0] - p0[0]) ** 2 + (p1[1] - p0[1]) ** 2)
 
 
+def nearest_point(pt, p0, p1):
+    import numpy
+    vec_p0_p1 = p1 - p0
+    vec_len = numpy.linalg.norm(vec_p0_p1)
+
+    vec_unit = vec_p0_p1 / vec_len
+
+    vec_p0_pt = pt - p0
+    project_vec_p0_pt_in_vec_unit = numpy.dot(vec_p0_pt, vec_unit)
+    vec_projection = vec_unit * project_vec_p0_pt_in_vec_unit
+    point_projected_on_line = p0 + vec_projection
+
+    if project_vec_p0_pt_in_vec_unit > vec_len:  # clip to segment
+        return p1
+    if project_vec_p0_pt_in_vec_unit < 0:
+        return p0
+
+    return point_projected_on_line
+
+
+def is_point_close_to_line(point, line, delta=0.2):
+    import numpy
+    line = numpy.array(line)
+    for i in range(len(line) - 1):
+        nearest = nearest_point(point, line[i], line[i + 1])
+        if calculate_distance(point, nearest) <= delta:
+            return True
+
+    return False
+
+
 def almost_equal(v1, v2, delta=1e-7):
     if v1.__class__ in (tuple, list):
         return all(almost_equal(x1, x2, delta) for (x1, x2) in compat.izip(v1, v2))
