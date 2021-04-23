@@ -1,8 +1,21 @@
 # License: LGPL
 #
 # Copyright: Brainwy Software
+import os
 import sys
 from functools import wraps
+
+__file__ = os.path.abspath(__file__)
+
+
+def get_public_api_location():
+    basedir = os.path.dirname(os.path.dirname(__file__))
+    public_api = os.path.join(basedir, 'public_api')
+    if os.path.exists(public_api):
+        # In dev mode we don't really use the public_api dir, we use
+        # the module dir directly.
+        return public_api
+    return basedir
 
 
 def overrides(method_overridden):
