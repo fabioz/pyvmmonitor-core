@@ -63,7 +63,8 @@ def _get_methods_and_properties(interface_class):
     for method_name in dir(interface_class):
         if method_name not in obj_methods:
             m = getattr(interface_class, method_name)
-            if inspect.isfunction(m) or inspect.ismethod(m) or m.__class__ == property:
+            if (inspect.isfunction(m) or inspect.ismethod(m) or
+                m.__class__ == property or m.__class__.__name__ in ('cython_function_or_method',)):
                 ret.append(method_name)
     return frozenset(ret)
 
