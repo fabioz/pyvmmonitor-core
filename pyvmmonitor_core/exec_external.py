@@ -161,7 +161,7 @@ class ExecExternal(object):
             return ''.join(current_read)
 
     def cancel(self):
-        if self._finished_event.isSet():
+        if self._finished_event.is_set():
             return
         process = self._process
 
