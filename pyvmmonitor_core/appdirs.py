@@ -16,10 +16,8 @@ See <http://github.com/ActiveState/appdirs> for details and usage.
 __version_info__ = (1, 2, 0)
 __version__ = '.'.join(map(str, __version_info__))
 
-
 import os
 import sys
-
 
 PY3 = sys.version_info[0] == 3
 
@@ -82,7 +80,7 @@ def user_data_dir(appname, appauthor=None, version=None, roaming=False):
 
 
 def site_data_dir(appname, appauthor=None, version=None):
-    """Return full path to the user-shared data dir for this application.
+    r"""Return full path to the user-shared data dir for this application.
 
         "appname" is the name of application.
         "appauthor" (only required and used on Windows) is the name of the
@@ -249,8 +247,8 @@ class AppDirs(object):
         return user_log_dir(self.appname, self.appauthor,
                             version=self.version)
 
-
 #---- internal support stuff
+
 
 def _get_win_folder_from_registry(csidl_name):
     """This is a fallback technique at best. I'm not sure if using the
@@ -324,6 +322,7 @@ def _get_win_folder_with_ctypes(csidl_name):
 
     return buf.value
 
+
 if sys.platform == "win32":
     try:
         import win32com.shell
@@ -334,7 +333,6 @@ if sys.platform == "win32":
             _get_win_folder = _get_win_folder_with_ctypes
         except ImportError:
             _get_win_folder = _get_win_folder_from_registry
-
 
 #---- self test code
 
